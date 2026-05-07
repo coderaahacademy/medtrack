@@ -2,6 +2,9 @@ package com.medtrack.doctor.api;
 
 import com.medtrack.doctor.domain.Doctor;
 import com.medtrack.doctor.service.DoctorService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,10 +17,10 @@ public class DoctorController {
     public DoctorController(DoctorService doctorService) {
         this.doctorService = doctorService;
     }
-    @PostMapping("/create")
-    public String create(@RequestBody CreateDoctorRequest request){
-        doctorService.createDoctor(request);
-        return "Successfully created";
+    @PostMapping
+    public ResponseEntity<DoctorResponse> create(/*@Valid*/ @RequestBody CreateDoctorRequest request){
+        DoctorResponse body= doctorService.createDoctor(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(body);
     }
 
     @GetMapping
@@ -26,8 +29,9 @@ public class DoctorController {
     }
 
     @GetMapping("/{id}")
-    public Doctor getById(@PathVariable Long id){
-        return doctorService.getDoctorById(id);
+    public ResponseEntity<DoctorResponse> getById(@PathVariable Long id){
+        DoctorResponse body= doctorService.getDoctorById(id);
+        return ResponseEntity.ok(body);
     }
 
     @DeleteMapping("/{id}")
@@ -37,8 +41,8 @@ public class DoctorController {
     }
 
     @PutMapping("/{id}")
-    public String  update(@PathVariable Long id, @RequestBody UpdateDoctorRequest request){
-        doctorService.updateDoctor(id,request);
-        return "Successfully deleted";
+    public ResponseEntity<DoctorResponse> update(@PathVariable Long id, @RequestBody UpdateDoctorRequest request){
+        DoctorResponse body= doctorService.updateDoctor(id,request);
+        return ResponseEntity.ok(body);
     }
 }

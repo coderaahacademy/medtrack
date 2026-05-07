@@ -1,16 +1,24 @@
 package com.medtrack.doctor.api;
 
-public class CreateDoctorRequest {
-    private String fullname;
-    private String specialization;
-    private Long userId;
+//import javax.validation.constrains.*;
 
-    public String getFullname() {
-        return fullname;
+public class CreateDoctorRequest {
+    //NotBlank
+    private String fullName;
+    //@NotBlank
+    private String specialization;
+    //@NotNulL
+    private Long userId;
+    public CreateDoctorRequest(){
+
+    };
+
+    public String getFullName() {
+        return fullName;
     }
 
-    public void setFullname(String fullname) {
-        this.fullname = fullname;
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 
     public String getSpecialization() {

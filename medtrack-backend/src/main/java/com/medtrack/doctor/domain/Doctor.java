@@ -11,7 +11,7 @@ public class Doctor {
     private Long id;
 
     @Column(nullable = false)
-    private String fullname;
+    private String fullName;
 
     @Column(nullable = false)
     private String specialization;
@@ -23,18 +23,18 @@ public class Doctor {
     public Doctor() {
     }
 
-    public Doctor(String fullname, String specialization, User user) {
-        this.fullname = fullname;
+    public Doctor(String fullName, String specialization, User user) {
+        this.fullName = fullName;
         this.specialization = specialization;
         this.user = user;
     }
 
     public String getFullname() {
-        return fullname;
+        return fullName;
     }
 
-    public void setFullname(String fullname) {
-        this.fullname = fullname;
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 
     public String getSpecialization() {

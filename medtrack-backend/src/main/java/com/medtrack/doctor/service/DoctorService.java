@@ -1,16 +1,18 @@
 package com.medtrack.doctor.service;
 
 import com.medtrack.doctor.api.CreateDoctorRequest;
+import com.medtrack.doctor.api.DoctorResponse;
 import com.medtrack.doctor.api.UpdateDoctorRequest;
 import com.medtrack.doctor.domain.Doctor;
 import com.medtrack.doctor.repository.DoctorRepository;
 import com.medtrack.user.domain.User;
 import com.medtrack.user.repository.UserRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class DoctorService {
@@ -22,49 +24,47 @@ public class DoctorService {
     }
 
     @Transactional
-    public void createDoctor(CreateDoctorRequest request){
-        Optional<User> userOptional = userRepository.findById(request.getUserId());
-        if(userOptional.isEmpty()){
-            throw new IllegalArgumentException("User not found with ID: "+request.getUserId());
-        }
-        User user=userOptional.get();
-        Doctor doctor= new Doctor();
-        doctor.setFullname(request.getFullname());
+    public DoctorResponse createDoctor(CreateDoctorRequest request){
+        User user=userRepository.findById(request.getUserId()).orElseThrow(()->
+                new ResponseStatusException(HttpStatus.NOT_FOUND,"User not found with ID: "+request.getUserId()));
+        Doctor doctor=new Doctor();
+        doctor.setFullName(request.getFullName());
         doctor.setSpecialization(request.getSpecialization());
         doctor.setUser(user);
-        doctorRepository.save(doctor);
+        Doctor savedDoctor=doctorRepository.save(doctor);
+        return DoctorResponse.mapToResponse(savedDoctor);
     }
 
     public List<Doctor> getAllDoctors(){
         return doctorRepository.findAll();
     }
 
-    public Doctor getDoctorById(Long id){
-        Optional<Doctor> doctorOptional=doctorRepository.findById(id);
-        if(!doctorRepository.existsById(id)){
-            throw new IllegalArgumentException("Doctor not found with id: "+id);
-        }
-        return doctorOptional.get();
+    public DoctorResponse getDoctorById(Long id){
+        Doctor doctor =doctorRepository.findById(id).orElseThrow(()-> new
+               ResponseStatusException(HttpStatus.NOT_FOUND,"Doctor not found with id: "+id));
+        return DoctorResponse.mapToResponse(doctor);
     }
 
     @Transactional
     public void deleteDoctor(Long id){
         if(!doctorRepository.existsById(id)){
-            throw new IllegalArgumentException("Cannot delete. Doctor not found with id: "+id);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Doctor not found with id: "+id);
         }
         doctorRepository.deleteById(id);
     }
 
     @Transactional
-    public void updateDoctor(Long id, UpdateDoctorRequest request){
-        Optional<Doctor> doctorOptional=doctorRepository.findById(id);
-        if (doctorOptional.isEmpty()){
-            throw new IllegalArgumentException("Doctor not found with id "+ id);
+    public DoctorResponse updateDoctor(Long id, UpdateDoctorRequest request){
+        Doctor doctor=doctorRepository.findById(id).orElseThrow(()-> new
+                ResponseStatusException(HttpStatus.NOT_FOUND,"Doctor not found with id: "+id));
+        if(request.getFullName()!= null){
+            doctor.setFullName(request.getFullName());
         }
-        Doctor doctor=doctorOptional.get();
-        doctor.setFullname(request.getFullname());
-        doctor.setSpecialization(request.getSpecialization());
-        doctorRepository.save(doctor);
+        if(request.getSpecialization()!=null){
+            doctor.setSpecialization(request.getSpecialization());
+        }
+        Doctor updatedDoctor=doctorRepository.save(doctor);
+        return DoctorResponse.mapToResponse(updatedDoctor);
     }
 
 

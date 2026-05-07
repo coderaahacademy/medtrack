@@ -4,7 +4,11 @@ public class UpdateDoctorRequest {
     private String fullname;
     private String specialization;
 
-    public String getFullname() {
+    public UpdateDoctorRequest() {
+
+    }
+
+    public String getFullName() {
         return fullname;
     }
 
