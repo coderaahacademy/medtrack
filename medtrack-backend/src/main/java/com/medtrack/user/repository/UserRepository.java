@@ -1,6 +1,6 @@
 package com.medtrack.user.repository;
 
-import com.medtrack.user.domain.User;
+import com.medtrack.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

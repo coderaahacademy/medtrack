@@ -1,7 +1,7 @@
 package com.medtrack.user.api;
 
-import com.medtrack.user.domain.Role;
-import com.medtrack.user.domain.UserStatus;
+import com.medtrack.enums.Role;
+import com.medtrack.enums.UserStatus;
 
 import java.time.LocalDateTime;
 
