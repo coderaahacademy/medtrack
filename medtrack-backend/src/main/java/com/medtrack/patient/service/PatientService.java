@@ -1,0 +1,114 @@
+package com.medtrack.patient.service;
+
+import com.medtrack.patient.entity.Patient;
+import com.medtrack.entity.User;
+import com.medtrack.entity.UserRole;
+import com.medtrack.enums.Role;
+import com.medtrack.patient.dto.*;
+import com.medtrack.patient.repository.PatientRepository;
+import com.medtrack.user.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
+@Service
+public class PatientService {
+
+    private final PatientRepository patientRepository;
+    private final UserRepository userRepository;
+    public PatientService(PatientRepository patientRepository, UserRepository userRepository) {
+        this.patientRepository = patientRepository;
+        this.userRepository = userRepository;
+    }
+
+    @Transactional
+    public PatientResponse createPatient(CreatePatientRequest request) {
+        Long userId = request.getUserId();
+        User user = userRepository.findById(userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with ID: " + userId));
+
+        if (patientRepository.existsByUserId(userId)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Patient profile already exists for user ID: " + userId);
+        }
+        Patient patient = new Patient();
+        patient.setFullName(request.getFullName());
+        patient.setBirthDate(request.getBirthDate());
+        patient.setPhone(request.getPhone());
+        patient.setAddress(request.getAddress());
+        patient.setAllergies(request.getAllergies());
+        patient.setBloodGroup(request.getBloodGroup());
+        patient.setGender(request.getGender());
+        patient.setChronicConditions(request.getChronicConditions());
+        boolean hasPatientRole = user.getRoles().stream().anyMatch(r -> r.getRole() == Role.PATIENT);
+        if (!hasPatientRole) {
+            UserRole role = new UserRole();
+            role.setRole(Role.PATIENT);
+            role.setUser(user);
+            user.getRoles().add(role);
+            userRepository.save(user);
+        }
+        patient.setUser(user);
+        Patient savedPatient = patientRepository.saveAndFlush(patient);
+        return toResponse(savedPatient);
+    }
+
+    @Transactional
+    public PatientResponse updatePatient(Long id, UpdatePatientRequest request) {
+        Patient patient = patientRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found with ID: " + id));
+        patient.setFullName(request.getFullName());
+        patient.setBirthDate(request.getBirthDate());
+        patient.setPhone(request.getPhone());
+        patient.setAddress(request.getAddress());
+        patient.setAllergies(request.getAllergies());
+        patient.setBloodGroup(request.getBloodGroup());
+        patient.setGender(request.getGender());
+        patient.setChronicConditions(request.getChronicConditions());
+        Patient updatedPatient = patientRepository.saveAndFlush(patient);
+        return toResponse(updatedPatient);
+    }
+
+    @Transactional(readOnly = true)
+    public PatientResponse getPatientById(Long id) {
+        Patient patient = patientRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found with ID: " + id));
+        return toResponse(patient);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<PatientResponse> getAllPatients(Pageable pageable) {
+        Page<Patient> patientPage = patientRepository.findAll(pageable);
+        return patientPage.map(this::toResponse);
+    }
+
+    @Transactional
+    public PatientResponse deletePatient(Long id) {
+        Patient patient = patientRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found with ID: " + id));
+        User user = patient.getUser();
+        user.getRoles().removeIf(r -> r.getRole() == Role.PATIENT);
+        patientRepository.delete(patient);
+        userRepository.saveAndFlush(user);
+        return toResponse(patient);
+    }
+
+    private PatientResponse toResponse(Patient patient) {
+        PatientResponse response = new PatientResponse();
+        response.setFullName(patient.getFullName());
+        response.setBirthDate(patient.getBirthDate());
+        response.setGender(patient.getGender());
+        response.setBloodGroup(patient.getBloodGroup());
+        response.setChronicConditions(patient.getChronicConditions());
+        response.setAllergies(patient.getAllergies());
+        response.setPhone(patient.getPhone());
+        response.setAddress(patient.getAddress());
+        response.setCreatedAt(patient.getCreatedAt());
+        response.setUpdatedAt(patient.getUpdatedAt());
+        response.setId(patient.getId());
+        response.setUserId(patient.getUser().getId());
+        if (patient.getFamilyDoctor() != null) {
+            response.setFamilyDoctorId(patient.getFamilyDoctor().getId());
+        }
+        return response;
+    }
+
+}
