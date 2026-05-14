@@ -45,4 +45,10 @@ public class PatientController {
         String successMessage = patientService.deletePatient(id);
         return ResponseEntity.ok(successMessage);
     }
+    @PatchMapping("/{id}/family-doctor")
+    public ResponseEntity<PatientResponse> updateFamilyDoctor(@PathVariable Long id, @RequestBody FamilyDoctorRequest request) {
+        PatientResponse body = patientService.updateDoctorFamily(id, request);
+        return ResponseEntity.ok(body);
+    }
+
 }
