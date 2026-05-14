@@ -9,8 +9,6 @@ public class UpdateDoctorRequest {
   private String licenseNumber;
   private String phone;
   private boolean active;
-//  private LocalDateTime createdAt;
-//  private LocalDateTime updatedAt;
 
     public String getFullName() {
         return fullName;
