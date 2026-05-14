@@ -10,8 +10,6 @@ public class CreateDoctorRequest {
   private String licenseNumber;
   private String phone;
   private boolean active;
-//  private LocalDateTime createdAt;
-//  private LocalDateTime updatedAt;
 
   public Long getUserId() {
     return userId;
@@ -61,19 +59,4 @@ public class CreateDoctorRequest {
     this.active = active;
   }
 
-//  public LocalDateTime getCreatedAt() {
-//    return createdAt;
-//  }
-//
-//  public void setCreatedAt(LocalDateTime createdAt) {
-//    this.createdAt = createdAt;
-//  }
-//
-//  public LocalDateTime getUpdatedAt() {
-//    return updatedAt;
-//  }
-//
-//  public void setUpdatedAt(LocalDateTime updatedAt) {
-//    this.updatedAt = updatedAt;
-//  }
 }
