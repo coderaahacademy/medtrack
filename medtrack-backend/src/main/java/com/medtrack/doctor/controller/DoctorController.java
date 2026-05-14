@@ -48,6 +48,6 @@ public class DoctorController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<DoctorResponse> deleteDoctor(@PathVariable long id){
-        doctorService.deleteDoctor(id);
+        DoctorResponse body = doctorService.deleteDoctor(id);
+        return ResponseEntity.ok(body);
     }
-}
