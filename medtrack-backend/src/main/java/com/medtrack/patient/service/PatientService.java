@@ -1,5 +1,7 @@
 package com.medtrack.patient.service;
 
+import com.medtrack.doctor.entity.Doctor;
+import com.medtrack.doctor.repository.DoctorRepository;
 import com.medtrack.patient.entity.Patient;
 import com.medtrack.entity.User;
 import com.medtrack.entity.UserRole;
@@ -19,9 +21,11 @@ public class PatientService {
 
     private final PatientRepository patientRepository;
     private final UserRepository userRepository;
-    public PatientService(PatientRepository patientRepository, UserRepository userRepository) {
+    private final DoctorRepository doctorRepository;
+    public PatientService(PatientRepository patientRepository, UserRepository userRepository, DoctorRepository doctorRepository) {
         this.patientRepository = patientRepository;
         this.userRepository = userRepository;
+        this.doctorRepository = doctorRepository;
     }
 
     @Transactional
@@ -89,6 +93,18 @@ public class PatientService {
         patientRepository.delete(patient);
         userRepository.saveAndFlush(user);
         return "Patient ID " + id + " was successfully deleted.";
+    }
+
+    @Transactional
+    public PatientResponse updateDoctorFamily(Long id, FamilyDoctorRequest request){
+        Long doctorId = request.getFamilyDoctorId();
+        Patient patient = patientRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found with ID: " + id));
+        Doctor doctor = doctorRepository.findById(doctorId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Doctor not found with ID: " + doctorId));
+        patient.setFamilyDoctor(doctor);
+        Patient savedPatient = patientRepository.saveAndFlush(patient);
+        return toResponse(savedPatient);
     }
 
     private PatientResponse toResponse(Patient patient) {
