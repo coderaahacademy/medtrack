@@ -1,7 +1,10 @@
 package com.medtrack.patient.controller;
 
 import com.medtrack.patient.dto.*;
+import com.medtrack.patient.repository.PatientRepository;
 import com.medtrack.patient.service.PatientService;
+import com.medtrack.prescription.dto.PrescriptionResponse;
+import com.medtrack.prescription.service.PrescriptionService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -13,8 +16,10 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/patients")
 public class PatientController {
     private final PatientService patientService;
-    public PatientController(PatientService patientService ) {
+    private final PrescriptionService prescriptionService;
+    public PatientController(PatientService patientService, PrescriptionService prescriptionService ) {
         this.patientService = patientService;
+        this.prescriptionService = prescriptionService;
     }
     @PostMapping
     public ResponseEntity<PatientResponse> createPatient(@RequestBody CreatePatientRequest request) {
@@ -30,6 +35,14 @@ public class PatientController {
     public ResponseEntity<PatientResponse> getPatientById(@PathVariable Long id) {
         PatientResponse body = patientService.getPatientById(id);
         return ResponseEntity.ok(body);
+    }
+    @GetMapping("/{id}/prescriptions")
+    public ResponseEntity<Page<PrescriptionResponse>> getPatientPrescriptions(@PathVariable Long id,
+                                                                              @RequestParam(defaultValue = "0")int page,
+                                                                              @RequestParam(defaultValue = "10")int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<PrescriptionResponse> prescriptions = prescriptionService.getPatientPrescriptions(id,pageable);
+        return ResponseEntity.ok(prescriptions);
     }
 
     @GetMapping

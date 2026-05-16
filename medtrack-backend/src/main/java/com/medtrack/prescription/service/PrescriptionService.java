@@ -71,7 +71,11 @@ public class PrescriptionService {
         Prescription savedPrescription = prescriptionRepository.saveAndFlush(prescription);
         return toResponse(savedPrescription);
     }
-
+    @Transactional(readOnly = true)
+    public Page<PrescriptionResponse> getPatientPrescriptions(Long patientId, Pageable pageable) {
+        Page<Prescription>  prescriptions = prescriptionRepository.findByPatientId(patientId, pageable);
+        return prescriptions.map(this::toResponse);
+    }
     private PrescriptionResponse toResponse(Prescription prescription) {
         PrescriptionResponse response = new PrescriptionResponse();
         response.setPatientId(prescription.getPatient().getId());
