@@ -1,4 +1,4 @@
-package com.medtrack.entity;
+package com.medtrack.visit.entity;
 
 import com.medtrack.doctor.entity.Doctor;
 import com.medtrack.patient.entity.Patient;

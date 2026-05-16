@@ -3,6 +3,7 @@ package com.medtrack.entity;
 import com.medtrack.doctor.entity.Doctor;
 import com.medtrack.enums.PrescriptionStatus;
 import com.medtrack.patient.entity.Patient;
+import com.medtrack.visit.entity.Visit;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
