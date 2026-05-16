@@ -1,4 +1,4 @@
-package com.medtrack.entity;
+package com.medtrack.prescription.entity;
 
 import com.medtrack.medication.entity.Medication;
 import jakarta.persistence.*;
