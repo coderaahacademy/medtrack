@@ -1,4 +1,4 @@
-package com.medtrack.user.domain;
+package com.medtrack.enums;
 
 public enum Role {
     PATIENT,

@@ -1,6 +1,6 @@
 package com.medtrack.user.api;
 
-import com.medtrack.user.domain.Role;
+import com.medtrack.enums.Role;
 
 public class RegisterUserRequest {
 

@@ -4,8 +4,10 @@ import com.medtrack.user.api.LoginRequest;
 import com.medtrack.user.api.LoginResponse;
 import com.medtrack.user.api.RegisterUserRequest;
 import com.medtrack.user.api.UserResponse;
-import com.medtrack.user.domain.User;
-import com.medtrack.user.domain.UserStatus;
+import com.medtrack.entity.User;
+import com.medtrack.entity.UserRole;
+import com.medtrack.enums.UserStatus;
+import com.medtrack.enums.Role;
 import com.medtrack.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,8 +31,13 @@ public class UserService {
         User user = new User();
         user.setEmail(request.getEmail());
         user.setPasswordHash(hashPassword(request.getPassword()));
-        user.setRole(request.getRole());
         user.setStatus(UserStatus.ACTIVE);
+
+        UserRole userRole = new UserRole();
+        userRole.setUser(user);
+        userRole.setRole(request.getRole());
+        user.getRoles().add(userRole);
+
         User saved = userRepository.save(user);
         return toUserResponse(saved);
     }
@@ -59,10 +66,11 @@ public class UserService {
     }
 
     private UserResponse toUserResponse(User user) {
+        Role mainRole = user.getRoles().isEmpty() ? null : user.getRoles().get(0).getRole();
         return new UserResponse(
                 user.getId(),
                 user.getEmail(),
-                user.getRole(),
+                mainRole,
                 user.getStatus(),
                 user.getCreatedAt()
         );

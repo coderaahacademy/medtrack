@@ -1,17 +1,10 @@
-package com.medtrack.user.domain;
+package com.medtrack.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
-
+import com.medtrack.enums.UserStatus;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -21,39 +14,37 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(nullable = false, name = "password_hash")
+    @Column(name = "password_hash", nullable = false)
     private String passwordHash;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Role role;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserStatus status;
 
-    @Column(nullable = false, name = "created_at")
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = false, name = "updated_at")
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserRole> roles = new ArrayList<>();
+
+    public User() {
+    }
 
     @PrePersist
     protected void onCreate() {
-        LocalDateTime now = LocalDateTime.now();
-        this.createdAt = now;
-        this.updatedAt = now;
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    public User() {
+        updatedAt = LocalDateTime.now();
     }
 
     public Long getId() {
@@ -80,14 +71,6 @@ public class User {
         this.passwordHash = passwordHash;
     }
 
-    public Role getRole() {
-        return role;
-    }
-
-    public void setRole(Role role) {
-        this.role = role;
-    }
-
     public UserStatus getStatus() {
         return status;
     }
@@ -110,5 +93,13 @@ public class User {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public List<UserRole> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<UserRole> roles) {
+        this.roles = roles;
     }
 }
