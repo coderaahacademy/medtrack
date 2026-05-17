@@ -1,14 +1,17 @@
-package com.medtrack.doctor.api;
+package com.medtrack.doctor.dto;
 
-//import javax.validation.constrains.*;
+import jakarta.validation.constraints.*;
 
 public class CreateDoctorRequest {
-    //NotBlank
+    @NotBlank
     private String fullName;
-    //@NotBlank
+    @NotBlank
     private String specialization;
-    //@NotNulL
+    @NotBlank
+    private String licenseNumber;
+    @NotNull
     private Long userId;
+    private String phone;
     public CreateDoctorRequest(){
 
     };
@@ -35,5 +38,21 @@ public class CreateDoctorRequest {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public String getLicenseNumber() {
+        return licenseNumber;
+    }
+
+    public void setLicenseNumber(String licenseNumber) {
+        this.licenseNumber = licenseNumber;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 }

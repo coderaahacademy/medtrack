@@ -1,11 +1,11 @@
 package com.medtrack.doctor.service;
 
-import com.medtrack.doctor.api.CreateDoctorRequest;
-import com.medtrack.doctor.api.DoctorResponse;
-import com.medtrack.doctor.api.UpdateDoctorRequest;
-import com.medtrack.doctor.domain.Doctor;
+import com.medtrack.doctor.dto.CreateDoctorRequest;
+import com.medtrack.doctor.dto.DoctorResponse;
+import com.medtrack.doctor.dto.UpdateDoctorRequest;
+import com.medtrack.doctor.entity.Doctor;
 import com.medtrack.doctor.repository.DoctorRepository;
-import com.medtrack.user.domain.User;
+import com.medtrack.entity.User;
 import com.medtrack.user.repository.UserRepository;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.HttpStatus;
@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class DoctorService {
@@ -30,13 +31,18 @@ public class DoctorService {
         Doctor doctor=new Doctor();
         doctor.setFullName(request.getFullName());
         doctor.setSpecialization(request.getSpecialization());
+        doctor.setLicenseNumber(request.getLicenseNumber());
+        doctor.setPhone(request.getPhone());
+        doctor.setActive(true);
         doctor.setUser(user);
         Doctor savedDoctor=doctorRepository.save(doctor);
         return DoctorResponse.mapToResponse(savedDoctor);
     }
 
-    public List<Doctor> getAllDoctors(){
-        return doctorRepository.findAll();
+    public List<DoctorResponse> getAllDoctors() {
+        return doctorRepository.findAll().stream()
+                .map(DoctorResponse::mapToResponse)
+                .collect(Collectors.toList());
     }
 
     public DoctorResponse getDoctorById(Long id){
@@ -57,12 +63,11 @@ public class DoctorService {
     public DoctorResponse updateDoctor(Long id, UpdateDoctorRequest request){
         Doctor doctor=doctorRepository.findById(id).orElseThrow(()-> new
                 ResponseStatusException(HttpStatus.NOT_FOUND,"Doctor not found with id: "+id));
-        if(request.getFullName()!= null){
-            doctor.setFullName(request.getFullName());
-        }
-        if(request.getSpecialization()!=null){
-            doctor.setSpecialization(request.getSpecialization());
-        }
+        doctor.setFullName(request.getFullName());
+        doctor.setSpecialization(request.getSpecialization());
+        doctor.setLicenseNumber(request.getLicenseNumber());
+        doctor.setPhone(request.getPhone());
+        doctor.setActive(request.isActive());
         Doctor updatedDoctor=doctorRepository.save(doctor);
         return DoctorResponse.mapToResponse(updatedDoctor);
     }

@@ -1,10 +1,12 @@
-package com.medtrack.doctor.api;
+package com.medtrack.doctor.controller;
 
-import com.medtrack.doctor.domain.Doctor;
+import com.medtrack.doctor.dto.CreateDoctorRequest;
+import com.medtrack.doctor.dto.DoctorResponse;
+import com.medtrack.doctor.dto.UpdateDoctorRequest;
+import jakarta.validation.Valid;
 import com.medtrack.doctor.service.DoctorService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,13 +20,13 @@ public class DoctorController {
         this.doctorService = doctorService;
     }
     @PostMapping
-    public ResponseEntity<DoctorResponse> create(/*@Valid*/ @RequestBody CreateDoctorRequest request){
+    public ResponseEntity<DoctorResponse> create(@Valid @RequestBody CreateDoctorRequest request){
         DoctorResponse body= doctorService.createDoctor(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(body);
     }
 
     @GetMapping
-    public List<Doctor> getAll(){
+    public List<DoctorResponse> getAll(){
         return doctorService.getAllDoctors();
     }
 
@@ -41,7 +43,7 @@ public class DoctorController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<DoctorResponse> update(@PathVariable Long id, @RequestBody UpdateDoctorRequest request){
+    public ResponseEntity<DoctorResponse> update(@Valid @PathVariable Long id, @RequestBody UpdateDoctorRequest request){
         DoctorResponse body= doctorService.updateDoctor(id,request);
         return ResponseEntity.ok(body);
     }

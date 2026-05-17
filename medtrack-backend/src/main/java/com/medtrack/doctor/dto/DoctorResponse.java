@@ -1,21 +1,27 @@
-package com.medtrack.doctor.api;
+package com.medtrack.doctor.dto;
 
-import com.medtrack.doctor.domain.Doctor;
+import com.medtrack.doctor.entity.Doctor;
 
 public class DoctorResponse {
     private Long id;
     private String fullName;
     private String specialization;
+    private String licenseNumber;
+    private String phone;
+    private boolean active;
     private Long userId;
 
     public DoctorResponse(){
 
     }
 
-    public DoctorResponse(Long id, String fullName, String specialization,Long userId){
+    public DoctorResponse(Long id, String fullName, String specialization,String licenseNumber,String phone,boolean active,Long userId){
         this.id=id;
         this.fullName=fullName;
         this.specialization=specialization;
+        this.licenseNumber=licenseNumber;
+        this.phone=phone;
+        this.active=active;
         this.userId=userId;
     }
 
@@ -51,11 +57,38 @@ public class DoctorResponse {
         this.userId = userId;
     }
 
+    public String getLicenseNumber() {
+        return licenseNumber;
+    }
+
+    public void setLicenseNumber(String licenseNumber) {
+        this.licenseNumber = licenseNumber;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
     public static DoctorResponse mapToResponse(Doctor doctor) {
         DoctorResponse response = new DoctorResponse();
         response.setId(doctor.getId());
-        response.setFullName(doctor.getFullname());
+        response.setFullName(doctor.getFullName());
         response.setSpecialization(doctor.getSpecialization());
+        response.setLicenseNumber(doctor.getLicenseNumber());
+        response.setPhone(doctor.getPhone());
+        response.setActive(doctor.isActive());
         if (doctor.getUser() != null) {
             response.setUserId(doctor.getUser().getId());
         }
