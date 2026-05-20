@@ -1,12 +1,11 @@
 package com.medtrack.entity;
 
-import com.medtrack.enums.ReportType;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "medical_reports")
-public class MedicalReport {
+@Table(name = "visits")
+public class Visit {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -17,24 +16,23 @@ public class MedicalReport {
     private Patient patient;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "doctor_id")
+    @JoinColumn(name = "doctor_id", nullable = false)
     private Doctor doctor;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "report_type", nullable = false)
-    private ReportType reportType;
-
-    @Column(nullable = false)
-    private String title;
+    @Column(name = "visit_date", nullable = false)
+    private LocalDateTime visitDate;
 
     @Column(columnDefinition = "TEXT")
-    private String description;
+    private String symptoms;
 
-    @Column(name = "file_url")
-    private String fileUrl;
+    @Column(columnDefinition = "TEXT")
+    private String diagnosis;
 
-    @Column(name = "report_date", nullable = false)
-    private LocalDateTime reportDate;
+    @Column(columnDefinition = "TEXT")
+    private String notes;
+
+    @Column(name = "follow_up_date")
+    private LocalDateTime followUpDate;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -42,7 +40,7 @@ public class MedicalReport {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public MedicalReport() {
+    public Visit() {
     }
 
     @PrePersist
@@ -80,44 +78,44 @@ public class MedicalReport {
         this.doctor = doctor;
     }
 
-    public ReportType getReportType() {
-        return reportType;
+    public LocalDateTime getVisitDate() {
+        return visitDate;
     }
 
-    public void setReportType(ReportType reportType) {
-        this.reportType = reportType;
+    public void setVisitDate(LocalDateTime visitDate) {
+        this.visitDate = visitDate;
     }
 
-    public String getTitle() {
-        return title;
+    public String getSymptoms() {
+        return symptoms;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
+    public void setSymptoms(String symptoms) {
+        this.symptoms = symptoms;
     }
 
-    public String getDescription() {
-        return description;
+    public String getDiagnosis() {
+        return diagnosis;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setDiagnosis(String diagnosis) {
+        this.diagnosis = diagnosis;
     }
 
-    public String getFileUrl() {
-        return fileUrl;
+    public String getNotes() {
+        return notes;
     }
 
-    public void setFileUrl(String fileUrl) {
-        this.fileUrl = fileUrl;
+    public void setNotes(String notes) {
+        this.notes = notes;
     }
 
-    public LocalDateTime getReportDate() {
-        return reportDate;
+    public LocalDateTime getFollowUpDate() {
+        return followUpDate;
     }
 
-    public void setReportDate(LocalDateTime reportDate) {
-        this.reportDate = reportDate;
+    public void setFollowUpDate(LocalDateTime followUpDate) {
+        this.followUpDate = followUpDate;
     }
 
     public LocalDateTime getCreatedAt() {
