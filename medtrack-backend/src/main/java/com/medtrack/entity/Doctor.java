@@ -1,6 +1,5 @@
-package com.medtrack.doctor.entity;
+package com.medtrack.entity;
 
-import com.medtrack.entity.User;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -22,12 +21,13 @@ public class Doctor {
     @Column(nullable = false)
     private String specialization;
 
-    @Column(name = "license_number", nullable = false)
+    @Column(name = "license_number", unique = true, nullable = false)
     private String licenseNumber;
 
     private String phone;
 
-    private boolean active;
+    @Column(nullable = false)
+    private boolean active = true;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
