@@ -1,7 +1,5 @@
-package com.medtrack.patient.entity;
+package com.medtrack.entity;
 
-import com.medtrack.doctor.entity.Doctor;
-import com.medtrack.entity.User;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
