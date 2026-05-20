@@ -1,5 +1,6 @@
 package com.medtrack.entity;
 
+import com.medtrack.doctor.entity.Doctor;
 import com.medtrack.enums.PrescriptionStatus;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
