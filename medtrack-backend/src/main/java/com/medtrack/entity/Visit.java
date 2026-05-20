@@ -1,10 +1,5 @@
 package com.medtrack.entity;
 
-import com.medtrack.doctor.entity.Doctor;
-<<<<<<< HEAD
-import com.medtrack.patient.entity.Patient;
-=======
->>>>>>> origin/main
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
