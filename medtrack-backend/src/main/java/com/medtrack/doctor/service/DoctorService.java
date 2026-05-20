@@ -4,7 +4,7 @@ import com.medtrack.doctor.dto.CreateDoctorRequest;
 import com.medtrack.doctor.dto.DoctorResponse;
 import com.medtrack.doctor.dto.UpdateDoctorRequest;
 import com.medtrack.doctor.entity.Doctor;
-import com.medtrack.doctor.repository.DoctorRepository;
+import com.medtrack.repository.DoctorRepository;
 import com.medtrack.entity.User;
 import com.medtrack.user.repository.UserRepository;
 import org.springframework.transaction.annotation.Transactional;
