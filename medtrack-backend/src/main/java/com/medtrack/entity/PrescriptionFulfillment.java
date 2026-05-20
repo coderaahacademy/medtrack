@@ -1,7 +1,6 @@
 package com.medtrack.entity;
 
 import com.medtrack.enums.FulfillmentStatus;
-import com.medtrack.prescription.entity.Prescription;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
