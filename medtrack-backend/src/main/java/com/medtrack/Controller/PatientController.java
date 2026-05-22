@@ -1,5 +1,6 @@
 package com.medtrack.controller;
 
+import com.medtrack.dto.FamilyDoctorRequest;
 import com.medtrack.dto.PatientRequest;
 import com.medtrack.dto.PatientResponse;
 import com.medtrack.service.PatientService;
@@ -37,6 +38,12 @@ public class PatientController {
     @GetMapping
     public ResponseEntity<Page<PatientResponse>> getAllPatients(Pageable pageable) {
         return ResponseEntity.ok(patientService.getAllPatients(pageable));
+    }
+
+    @PatchMapping("/{id}/family-doctor")
+    public ResponseEntity<PatientResponse> updateFamilyDoctor(@PathVariable Long id, @RequestBody FamilyDoctorRequest request) {
+        PatientResponse body = patientService.updateDoctorFamily(id, request);
+        return ResponseEntity.ok(body);
     }
 
     @DeleteMapping("/{id}")
