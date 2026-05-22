@@ -6,6 +6,7 @@ import com.medtrack.entity.User;
 import com.medtrack.entity.UserRole;
 import com.medtrack.enums.Role;
 import com.medtrack.repository.DoctorRepository;
+import com.medtrack.repository.PatientRepository;
 import com.medtrack.user.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,10 +19,12 @@ import org.springframework.web.server.ResponseStatusException;
 public class DoctorService {
     private final DoctorRepository doctorRepository;
     private final UserRepository userRepository;
+    private final PatientRepository patientRepository;
 
-    public DoctorService(DoctorRepository doctorRepository, UserRepository userRepository) {
+    public DoctorService(DoctorRepository doctorRepository, UserRepository userRepository, PatientRepository patientRepository) {
         this.doctorRepository = doctorRepository;
         this.userRepository = userRepository;
+        this.patientRepository = patientRepository;
     }
 
     @Transactional
@@ -85,6 +88,7 @@ public class DoctorService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Doctor not found with ID: " + id));
         User user = doctor.getUser();
         user.getRoles().removeIf(r -> r.getRole() == Role.DOCTOR);
+        patientRepository.unassignFamilyDoctor(id);
         doctorRepository.delete(doctor);
         userRepository.saveAndFlush(user);
         return "Doctor ID " + id + " was successfully deleted.";

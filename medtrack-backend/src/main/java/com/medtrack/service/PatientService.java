@@ -1,7 +1,9 @@
 package com.medtrack.service;
 
+import com.medtrack.dto.FamilyDoctorRequest;
 import com.medtrack.dto.PatientRequest;
 import com.medtrack.dto.PatientResponse;
+import com.medtrack.entity.Doctor;
 import com.medtrack.entity.Patient;
 import com.medtrack.entity.User;
 import com.medtrack.repository.PatientRepository;
@@ -87,6 +89,18 @@ public class PatientService {
     @Transactional(readOnly = true)
     public Page<PatientResponse> getAllPatients(Pageable pageable) {
         return patientRepository.findAll(pageable).map(this::toResponse);
+    }
+
+    @Transactional
+    public PatientResponse updateDoctorFamily(Long id, FamilyDoctorRequest request){
+        Long doctorId = request.getFamilyDoctorId();
+        Patient patient = patientRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Patient not found with ID: " + id));
+        Doctor doctor = doctorRepository.findById(doctorId)
+                .orElseThrow(() -> new IllegalArgumentException("Doctor not found with ID: " + doctorId));
+        patient.setFamilyDoctor(doctor);
+        Patient savedPatient = patientRepository.saveAndFlush(patient);
+        return toResponse(savedPatient);
     }
 
     @Transactional
