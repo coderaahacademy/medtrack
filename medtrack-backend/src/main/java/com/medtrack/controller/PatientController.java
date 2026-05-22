@@ -3,7 +3,9 @@ package com.medtrack.controller;
 import com.medtrack.dto.FamilyDoctorRequest;
 import com.medtrack.dto.PatientRequest;
 import com.medtrack.dto.PatientResponse;
+import com.medtrack.dto.PrescriptionResponse;
 import com.medtrack.service.PatientService;
+import com.medtrack.service.PrescriptionService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -15,9 +17,11 @@ import org.springframework.web.bind.annotation.*;
 public class PatientController {
 
     private final PatientService patientService;
+    private final PrescriptionService prescriptionService;
 
-    public PatientController(PatientService patientService) {
+    public PatientController(PatientService patientService, PrescriptionService prescriptionService) {
         this.patientService = patientService;
+        this.prescriptionService = prescriptionService;
     }
 
     @PostMapping
@@ -38,6 +42,12 @@ public class PatientController {
     @GetMapping
     public ResponseEntity<Page<PatientResponse>> getAllPatients(Pageable pageable) {
         return ResponseEntity.ok(patientService.getAllPatients(pageable));
+    }
+
+    @GetMapping("/{id}/prescriptions")
+    public ResponseEntity<Page<PrescriptionResponse>> getPatientPrescriptions(@PathVariable Long id, Pageable pageable) {
+        Page<PrescriptionResponse> prescriptions = prescriptionService.getPatientPrescriptions(id, pageable);
+        return ResponseEntity.ok(prescriptions);
     }
 
     @PatchMapping("/{id}/family-doctor")
