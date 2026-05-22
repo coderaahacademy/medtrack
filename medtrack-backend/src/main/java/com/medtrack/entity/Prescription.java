@@ -3,6 +3,8 @@ package com.medtrack.entity;
 import com.medtrack.enums.PrescriptionStatus;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "prescriptions")
@@ -23,6 +25,9 @@ public class Prescription {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "visit_id")
     private Visit visit;
+
+    @OneToMany(mappedBy = "prescription", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PrescriptionItem> items = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -52,6 +57,11 @@ public class Prescription {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    public void addItem(PrescriptionItem item) {
+        items.add(item);
+        item.setPrescription(this);
     }
 
     public Long getId() {
@@ -85,6 +95,10 @@ public class Prescription {
     public void setVisit(Visit visit) {
         this.visit = visit;
     }
+
+    public List<PrescriptionItem> getItems() {return items;}
+
+    public void setItems(List<PrescriptionItem> items) {this.items = items;}
 
     public PrescriptionStatus getStatus() {
         return status;
