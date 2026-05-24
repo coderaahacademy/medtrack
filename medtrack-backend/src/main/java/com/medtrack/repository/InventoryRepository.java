@@ -8,10 +8,11 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface PharmacyInventoryRepository extends JpaRepository<PharmacyInventory, Long> {
+public interface InventoryRepository extends JpaRepository<PharmacyInventory, Long> {
 
     List<PharmacyInventory> findByPharmacyId(Long pharmacyId);
 
     Optional<PharmacyInventory> findByPharmacyIdAndMedicationId(Long pharmacyId, Long medicationId);
 
+    boolean existsByPharmacyIdAndMedicationId(Long pharmacyId, Long medicationId);
 }
