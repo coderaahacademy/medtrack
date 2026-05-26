@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("api/prescriptions")
+@RequestMapping("/api/prescriptions")
 public class PrescriptionController {
     private final PrescriptionService prescriptionService;
 
