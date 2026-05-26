@@ -3,6 +3,8 @@ package com.medtrack.service;
 import com.medtrack.dto.*;
 import com.medtrack.entity.*;
 import com.medtrack.repository.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,6 +59,12 @@ public class PrescriptionService {
         });
         Prescription savedPrescription = prescriptionRepository.saveAndFlush(prescription);
         return toResponse(savedPrescription);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<PrescriptionResponse> getPatientPrescriptions(Long patientId, Pageable pageable) {
+        Page<Prescription> prescriptions = prescriptionRepository.findByPatientId(patientId, pageable);
+        return prescriptions.map(this::toResponse);
     }
 
     private PrescriptionResponse toResponse(Prescription prescription) {
