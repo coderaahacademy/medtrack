@@ -1,4 +1,4 @@
-package com.medtrack.user.repository;
+package com.medtrack.repository;
 
 import com.medtrack.entity.PharmacyInventory;
 import org.springframework.data.jpa.repository.JpaRepository;
