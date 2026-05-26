@@ -1,4 +1,4 @@
-package com.medtrack.config;
+package com.medtrack.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

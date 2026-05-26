@@ -1,4 +1,4 @@
-package com.medtrack.user.api;
+package com.medtrack.dto;
 
 public class LoginRequest {
 

@@ -1,6 +1,10 @@
-package com.medtrack.user.api;
+package com.medtrack.controller;
 
-import com.medtrack.user.service.UserService;
+import com.medtrack.dto.LoginRequest;
+import com.medtrack.dto.LoginResponse;
+import com.medtrack.dto.RegisterUserRequest;
+import com.medtrack.dto.UserResponse;
+import com.medtrack.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

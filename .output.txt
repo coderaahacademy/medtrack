@@ -1,0 +1,353 @@
+[INFO] Scanning for projects...
+[INFO]
+[INFO] -------------------< com.medtrack:medtrack-backend >--------------------
+[INFO] Building medtrack-backend 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO]
+[INFO] --- resources:3.3.1:resources (default-resources) @ medtrack-backend ---
+[INFO] Copying 1 resource from src/main/resources to target/classes
+[INFO] Copying 0 resource from src/main/resources to target/classes
+[INFO]
+[INFO] --- compiler:3.13.0:compile (default-compile) @ medtrack-backend ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO]
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ medtrack-backend ---
+[INFO] skip non existing resourceDirectory /Users/fatemeh.jafari/Desktop/medtrack/medtrack-backend/src/test/resources
+[INFO]
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ medtrack-backend ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 1 source file with javac [debug parameters release 21] to target/test-classes
+[INFO]
+[INFO] --- surefire:3.5.2:test (default-test) @ medtrack-backend ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO]
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running com.medtrack.MedtrackApplicationTests
+10:06:27.843 [main] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.medtrack.MedtrackApplicationTests]: MedtrackApplicationTests does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+10:06:27.905 [main] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.medtrack.MedtrackApplication for test class com.medtrack.MedtrackApplicationTests
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.4.1)
+2026-05-26T10:06:28.124+02:00  INFO 70213 --- [           main] com.medtrack.MedtrackApplicationTests    : Starting MedtrackApplicationTests using Java 21.0.10 with PID 70213 (started by fatemeh.jafari in /Users/fatemeh.jafari/Desktop/medtrack/medtrack-backend)
+2026-05-26T10:06:28.125+02:00  INFO 70213 --- [           main] com.medtrack.MedtrackApplicationTests    : No active profile set, falling back to 1 default profile: "default"
+2026-05-26T10:06:28.576+02:00  INFO 70213 --- [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-05-26T10:06:28.621+02:00  INFO 70213 --- [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 40 ms. Found 10 JPA repository interfaces.
+2026-05-26T10:06:28.879+02:00  INFO 70213 --- [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-05-26T10:06:28.916+02:00  INFO 70213 --- [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.4.Final
+2026-05-26T10:06:28.938+02:00  INFO 70213 --- [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-05-26T10:06:29.094+02:00  INFO 70213 --- [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-05-26T10:06:29.112+02:00  INFO 70213 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-05-26T10:06:29.212+02:00  INFO 70213 --- [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:medtrackdb user=SA
+2026-05-26T10:06:29.213+02:00  INFO 70213 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-05-26T10:06:29.247+02:00  INFO 70213 --- [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+        Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+        Database driver: undefined/unknown
+        Database version: 2.3.232
+        Autocommit mode: undefined/unknown
+        Isolation level: undefined/unknown
+        Minimum pool size: undefined/unknown
+        Maximum pool size: undefined/unknown
+2026-05-26T10:06:30.514+02:00  INFO 70213 --- [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+Hibernate:
+    create table doctors (
+        id bigint generated by default as identity,
+        active boolean not null,
+        created_at timestamp(6) not null,
+        full_name varchar(255) not null,
+        license_number varchar(255) not null,
+        phone varchar(255),
+        specialization varchar(255) not null,
+        updated_at timestamp(6),
+        user_id bigint not null,
+        primary key (id)
+    )
+Hibernate:
+    create table medical_reports (
+        id bigint generated by default as identity,
+        created_at timestamp(6) not null,
+        description TEXT,
+        file_url varchar(255),
+        report_date timestamp(6) not null,
+        report_type enum ('CLINICAL_NOTE','DISCHARGE','LAB','OTHER','RADIOLOGY') not null,
+        title varchar(255) not null,
+        updated_at timestamp(6),
+        doctor_id bigint,
+        patient_id bigint not null,
+        primary key (id)
+    )
+Hibernate:
+    create table medications (
+        id bigint generated by default as identity,
+        active boolean not null,
+        brand varchar(255),
+        created_at timestamp(6) not null,
+        dosage_form varchar(255),
+        generic_name varchar(255),
+        name varchar(255) not null,
+        requires_prescription boolean,
+        strength varchar(255),
+        updated_at timestamp(6),
+        primary key (id)
+    )
+Hibernate:
+    create table patients (
+        id bigint generated by default as identity,
+        address varchar(255),
+        allergies TEXT,
+        birth_date date,
+        blood_group varchar(255),
+        chronic_conditions TEXT,
+        created_at timestamp(6) not null,
+        full_name varchar(255) not null,
+        gender varchar(255),
+        phone varchar(255),
+        updated_at timestamp(6),
+        family_doctor_id bigint,
+        user_id bigint not null,
+        primary key (id)
+    )
+Hibernate:
+    create table pharmacies (
+        id bigint generated by default as identity,
+        active boolean not null,
+        address varchar(255),
+        created_at timestamp(6) not null,
+        email varchar(255),
+        name varchar(255) not null,
+        phone varchar(255),
+        updated_at timestamp(6),
+        primary key (id)
+    )
+Hibernate:
+    create table pharmacy_inventory (
+        id bigint generated by default as identity,
+        minimum_stock integer,
+        quantity_available integer not null,
+        updated_at timestamp(6),
+        medication_id bigint not null,
+        pharmacy_id bigint not null,
+        primary key (id)
+    )
+Hibernate:
+    create table prescription_fulfillments (
+        id bigint generated by default as identity,
+        accepted_at timestamp(6),
+        completed_at timestamp(6),
+        created_at timestamp(6) not null,
+        ready_at timestamp(6),
+        rejection_reason TEXT,
+        requested_at timestamp(6),
+        status enum ('ACCEPTED','COMPLETED','PENDING','PREPARING','READY_FOR_PICKUP','REJECTED') not null,
+        updated_at timestamp(6),
+        pharmacy_id bigint not null,
+        prescription_id bigint not null,
+        primary key (id)
+    )
+Hibernate:
+    create table prescription_items (
+        id bigint generated by default as identity,
+        created_at timestamp(6) not null,
+        dosage varchar(255) not null,
+        duration_days integer not null,
+        frequency varchar(255) not null,
+        instructions TEXT,
+        quantity integer not null,
+        updated_at timestamp(6),
+        medication_id bigint not null,
+        prescription_id bigint not null,
+        primary key (id)
+    )
+Hibernate:
+    create table prescriptions (
+        id bigint generated by default as identity,
+        created_at timestamp(6) not null,
+        issue_date timestamp(6) not null,
+        notes TEXT,
+        status enum ('CANCELLED','COMPLETED','DRAFT','ISSUED','PARTIALLY_FULFILLED','SENT_TO_PHARMACY') not null,
+        updated_at timestamp(6),
+        doctor_id bigint not null,
+        patient_id bigint not null,
+        visit_id bigint,
+        primary key (id)
+    )
+Hibernate:
+    create table user_roles (
+        id bigint generated by default as identity,
+        role enum ('ADMIN','DOCTOR','PATIENT','PHARMACY') not null,
+        user_id bigint not null,
+        primary key (id)
+    )
+Hibernate:
+    create table users (
+        id bigint generated by default as identity,
+        created_at timestamp(6) not null,
+        email varchar(255) not null,
+        password_hash varchar(255) not null,
+        status enum ('ACTIVE','DISABLED') not null,
+        updated_at timestamp(6),
+        primary key (id)
+    )
+Hibernate:
+    create table visits (
+        id bigint generated by default as identity,
+        created_at timestamp(6) not null,
+        diagnosis TEXT,
+        follow_up_date timestamp(6),
+        notes TEXT,
+        symptoms TEXT,
+        updated_at timestamp(6),
+        visit_date timestamp(6) not null,
+        doctor_id bigint not null,
+        patient_id bigint not null,
+        primary key (id)
+    )
+Hibernate:
+    alter table if exists doctors
+       drop constraint if exists UK1xu5x0jae737xae254t4rgcd1
+Hibernate:
+    alter table if exists doctors
+       add constraint UK1xu5x0jae737xae254t4rgcd1 unique (license_number)
+Hibernate:
+    alter table if exists doctors
+       drop constraint if exists UKt1f6cueqyjwx5ghew9ar1exe3
+Hibernate:
+    alter table if exists doctors
+       add constraint UKt1f6cueqyjwx5ghew9ar1exe3 unique (user_id)
+Hibernate:
+    alter table if exists patients
+       drop constraint if exists UK9tbsl3fmey0eofbm2xj69v4qs
+Hibernate:
+    alter table if exists patients
+       add constraint UK9tbsl3fmey0eofbm2xj69v4qs unique (user_id)
+Hibernate:
+    alter table if exists pharmacy_inventory
+       drop constraint if exists UKpffbga2fjjil5aeyhtnbsdh8l
+Hibernate:
+    alter table if exists pharmacy_inventory
+       add constraint UKpffbga2fjjil5aeyhtnbsdh8l unique (pharmacy_id, medication_id)
+Hibernate:
+    alter table if exists user_roles
+       drop constraint if exists UKs23eulmpf814we7643dhwwrkq
+Hibernate:
+    alter table if exists user_roles
+       add constraint UKs23eulmpf814we7643dhwwrkq unique (user_id, role)
+Hibernate:
+    alter table if exists users
+       drop constraint if exists UK6dotkott2kjsp8vw4d0m25fb7
+Hibernate:
+    alter table if exists users
+       add constraint UK6dotkott2kjsp8vw4d0m25fb7 unique (email)
+Hibernate:
+    alter table if exists doctors
+       add constraint FKe9pf5qtxxkdyrwibaevo9frtk
+       foreign key (user_id)
+       references users
+Hibernate:
+    alter table if exists medical_reports
+       add constraint FKq8xm71526rcc6jw8aa1mel0b9
+       foreign key (doctor_id)
+       references doctors
+Hibernate:
+    alter table if exists medical_reports
+       add constraint FK3vms19yslh5fp2ewsda8k71tb
+       foreign key (patient_id)
+       references patients
+Hibernate:
+    alter table if exists patients
+       add constraint FKsuy5wl4qwid6ts5rs9b3ss7h9
+       foreign key (family_doctor_id)
+       references doctors
+Hibernate:
+    alter table if exists patients
+       add constraint FKuwca24wcd1tg6pjex8lmc0y7
+       foreign key (user_id)
+       references users
+Hibernate:
+    alter table if exists pharmacy_inventory
+       add constraint FKsgnx4wtgacknxk1usfajrcng0
+       foreign key (medication_id)
+       references medications
+Hibernate:
+    alter table if exists pharmacy_inventory
+       add constraint FK3f2iy58u9k69e0henlsunv1ra
+       foreign key (pharmacy_id)
+       references pharmacies
+Hibernate:
+    alter table if exists prescription_fulfillments
+       add constraint FKgphnwenyvlfxrst1dfbhl9g1v
+       foreign key (pharmacy_id)
+       references pharmacies
+Hibernate:
+    alter table if exists prescription_fulfillments
+       add constraint FKhusxywnurp8387akn3ruj6ljb
+       foreign key (prescription_id)
+       references prescriptions
+Hibernate:
+    alter table if exists prescription_items
+       add constraint FKedqiiymwh98fpomx841xjuuq7
+       foreign key (medication_id)
+       references medications
+Hibernate:
+    alter table if exists prescription_items
+       add constraint FK6uh7tdy2lv6sx34u1365acqsf
+       foreign key (prescription_id)
+       references prescriptions
+Hibernate:
+    alter table if exists prescriptions
+       add constraint FK24chc88e4so7cd6melh11rv6
+       foreign key (doctor_id)
+       references doctors
+Hibernate:
+    alter table if exists prescriptions
+       add constraint FKqydyol76jn1o37k1bdbkjgq74
+       foreign key (patient_id)
+       references patients
+Hibernate:
+    alter table if exists prescriptions
+       add constraint FK8imtu9j8v5mp4rqmtrcx6hud8
+       foreign key (visit_id)
+       references visits
+Hibernate:
+    alter table if exists user_roles
+       add constraint FKhfh9dx7w3ubf1co1vdev94g3f
+       foreign key (user_id)
+       references users
+Hibernate:
+    alter table if exists visits
+       add constraint FKth95fndjk3y3nepjfu3f66r63
+       foreign key (doctor_id)
+       references doctors
+Hibernate:
+    alter table if exists visits
+       add constraint FKra5p2e0tp6djolm46kdr42cyt
+       foreign key (patient_id)
+       references patients
+2026-05-26T10:06:30.582+02:00  INFO 70213 --- [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-05-26T10:06:31.099+02:00  WARN 70213 --- [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-05-26T10:06:31.405+02:00  INFO 70213 --- [           main] o.s.b.a.h2.H2ConsoleAutoConfiguration    : H2 console available at '/h2-console'. Database available at 'jdbc:h2:mem:medtrackdb'
+2026-05-26T10:06:31.446+02:00  INFO 70213 --- [           main] com.medtrack.MedtrackApplicationTests    : Started MedtrackApplicationTests in 3.461 seconds (process running for 4.097)
+Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build what is described in Mockito's documentation: https://javadoc.io/doc/org.mockito/mockito-core/latest/org/mockito/Mockito.html#0.3
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+WARNING: A Java agent has been loaded dynamically (/Users/fatemeh.jafari/.m2/repository/net/bytebuddy/byte-buddy-agent/1.15.11/byte-buddy-agent-1.15.11.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.047 s -- in com.medtrack.MedtrackApplicationTests
+[INFO]
+[INFO] Results:
+[INFO]
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
+[INFO]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  5.896 s
+[INFO] Finished at: 2026-05-26T10:06:31+02:00
+[INFO] ------------------------------------------------------------------------

@@ -1,14 +1,14 @@
-package com.medtrack.user.service;
+package com.medtrack.service;
 
-import com.medtrack.user.api.LoginRequest;
-import com.medtrack.user.api.LoginResponse;
-import com.medtrack.user.api.RegisterUserRequest;
-import com.medtrack.user.api.UserResponse;
+import com.medtrack.dto.LoginRequest;
+import com.medtrack.dto.LoginResponse;
+import com.medtrack.dto.RegisterUserRequest;
+import com.medtrack.dto.UserResponse;
 import com.medtrack.entity.User;
 import com.medtrack.entity.UserRole;
 import com.medtrack.enums.UserStatus;
 import com.medtrack.enums.Role;
-import com.medtrack.user.repository.UserRepository;
+import com.medtrack.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

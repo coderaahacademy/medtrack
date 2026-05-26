@@ -1,4 +1,4 @@
-package com.medtrack.user.api;
+package com.medtrack.dto;
 
 import com.medtrack.enums.Role;
 import com.medtrack.enums.UserStatus;

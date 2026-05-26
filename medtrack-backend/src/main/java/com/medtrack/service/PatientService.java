@@ -7,7 +7,7 @@ import com.medtrack.entity.Doctor;
 import com.medtrack.entity.Patient;
 import com.medtrack.entity.User;
 import com.medtrack.repository.PatientRepository;
-import com.medtrack.user.repository.UserRepository;
+import com.medtrack.repository.UserRepository;
 import com.medtrack.repository.DoctorRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -7,7 +7,7 @@ import com.medtrack.entity.UserRole;
 import com.medtrack.enums.Role;
 import com.medtrack.repository.DoctorRepository;
 import com.medtrack.repository.PatientRepository;
-import com.medtrack.user.repository.UserRepository;
+import com.medtrack.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;

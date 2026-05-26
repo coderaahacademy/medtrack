@@ -1,9 +1,9 @@
 package com.medtrack.repository;
 
-import com.medtrack.entity.Fulfillment;
+import com.medtrack.entity.Pharmacy;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface FulfillmentRepository extends JpaRepository<Fulfillment, Long> {
+public interface PharmacyRepository extends JpaRepository<Pharmacy, Long> {
 }
