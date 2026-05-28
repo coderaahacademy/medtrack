@@ -3,6 +3,7 @@ package com.medtrack.controller;
 import com.medtrack.dto.InventoryRequest;
 import com.medtrack.dto.InventoryResponse;
 import com.medtrack.service.InventoryService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,13 +18,13 @@ public class InventoryController {
     }
 
     @PostMapping
-    public ResponseEntity<InventoryResponse>  createInventory(@RequestBody InventoryRequest request) {
+    public ResponseEntity<InventoryResponse>  createInventory(@Valid @RequestBody InventoryRequest request) {
         InventoryResponse body = inventoryService.createInventory(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(body);
     }
 
     @PutMapping
-    public ResponseEntity<InventoryResponse>  updateInventory(@RequestBody InventoryRequest request) {
+    public ResponseEntity<InventoryResponse>  updateInventory(@Valid @RequestBody InventoryRequest request) {
         InventoryResponse body = inventoryService.updateInventory(request);
         return ResponseEntity.ok(body);
     }
