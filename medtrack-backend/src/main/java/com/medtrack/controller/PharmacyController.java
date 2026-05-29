@@ -2,6 +2,7 @@ package com.medtrack.controller;
 
 import com.medtrack.entity.Pharmacy;
 import com.medtrack.service.PharmacyService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -16,7 +17,7 @@ public class PharmacyController {
     }
 
     @PostMapping
-    public ResponseEntity<Pharmacy> create(@RequestBody Pharmacy pharmacy) {
+    public ResponseEntity<Pharmacy> create(@Valid @RequestBody Pharmacy pharmacy) {
         return ResponseEntity.ok(pharmacyService.createPharmacy(pharmacy));
     }
 

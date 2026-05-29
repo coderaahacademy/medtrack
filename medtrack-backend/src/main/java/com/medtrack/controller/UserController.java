@@ -5,6 +5,7 @@ import com.medtrack.dto.LoginResponse;
 import com.medtrack.dto.RegisterUserRequest;
 import com.medtrack.dto.UserResponse;
 import com.medtrack.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,13 +24,13 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> register(@RequestBody RegisterUserRequest request) {
+    public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterUserRequest request) {
         UserResponse body = userService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(body);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         LoginResponse body = userService.login(request);
         return ResponseEntity.ok(body);
     }
