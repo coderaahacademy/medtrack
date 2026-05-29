@@ -12,8 +12,6 @@ public class PatientRequest {
     @NotBlank(message = "Full name cannot be empty")
     @Size(min = 2, max = 100, message = "Full name must be between 2 and 100 characters")
     private String fullName;
-    @NotBlank(message = "Specialization is required")
-    private String specialization;
     @NotNull(message = "Birth date is required")
     @Past(message = "Birth date must be in the past")
     private LocalDate birthDate;
