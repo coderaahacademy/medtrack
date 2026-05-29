@@ -87,7 +87,7 @@ public class PatientService {
     }
 
     @Transactional(readOnly = true)
-    public Page<PatientResponse> getAllPatients(Pageable pageable) {
+    public Page<PatientResponse> getAll(Pageable pageable) {
         Page<Patient> patientPage = patientRepository.findAll(pageable);
         return patientPage.map(this::toResponse);
     }

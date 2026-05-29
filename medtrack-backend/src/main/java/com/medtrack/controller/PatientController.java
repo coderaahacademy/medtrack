@@ -27,6 +27,11 @@ public class PatientController {
         return ResponseEntity.status(HttpStatus.CREATED).body(patientService.create(request));
     }
 
+    @GetMapping
+    public ResponseEntity<Page<PatientResponse>> getAll(Pageable pageable) {
+        return ResponseEntity.ok(patientService.getAll(pageable));
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<PatientResponse> updatePatient(@PathVariable Long id, @Valid @RequestBody UpdatePatientRequest request) {
         return ResponseEntity.ok(patientService.updatePatient(id, request));
@@ -35,11 +40,6 @@ public class PatientController {
     @GetMapping("/{id}")
     public ResponseEntity<PatientResponse> getPatientById(@PathVariable Long id) {
         return ResponseEntity.ok(patientService.getPatientById(id));
-    }
-
-    @GetMapping
-    public ResponseEntity<Page<PatientResponse>> getAllPatients(Pageable pageable) {
-        return ResponseEntity.ok(patientService.getAllPatients(pageable));
     }
 
     @GetMapping("/{id}/prescriptions")

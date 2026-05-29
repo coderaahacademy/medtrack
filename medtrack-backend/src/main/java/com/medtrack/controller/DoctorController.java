@@ -27,7 +27,7 @@ public class DoctorController {
 
     @GetMapping
     public ResponseEntity<Page<DoctorResponse>> getAll(Pageable pageable) {
-        return ResponseEntity.ok(doctorService.getAllDoctors(pageable));
+        return ResponseEntity.ok(doctorService.getAll(pageable));
     }
 
     @GetMapping("/{id}")
