@@ -83,7 +83,7 @@ public class DoctorService {
     }
 
     @Transactional
-    public String deleteDoctor(Long id) {
+    public String delete(Long id) {
         Doctor doctor = doctorRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Doctor not found with ID: " + id));
         User user = doctor.getUser();
