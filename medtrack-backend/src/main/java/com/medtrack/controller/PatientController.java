@@ -6,6 +6,7 @@ import com.medtrack.dto.PatientResponse;
 import com.medtrack.dto.PrescriptionResponse;
 import com.medtrack.service.PatientService;
 import com.medtrack.service.PrescriptionService;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -25,12 +26,12 @@ public class PatientController {
     }
 
     @PostMapping
-    public ResponseEntity<PatientResponse> createPatient(@RequestBody PatientRequest request) {
+    public ResponseEntity<PatientResponse> createPatient(@Valid @RequestBody PatientRequest request) {
         return new ResponseEntity<>(patientService.createPatient(request), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PatientResponse> updatePatient(@PathVariable Long id, @RequestBody PatientRequest request) {
+    public ResponseEntity<PatientResponse> updatePatient(@PathVariable Long id, @Valid @RequestBody PatientRequest request) {
         return ResponseEntity.ok(patientService.updatePatient(id, request));
     }
 
@@ -51,7 +52,7 @@ public class PatientController {
     }
 
     @PatchMapping("/{id}/family-doctor")
-    public ResponseEntity<PatientResponse> updateFamilyDoctor(@PathVariable Long id, @RequestBody FamilyDoctorRequest request) {
+    public ResponseEntity<PatientResponse> updateFamilyDoctor(@PathVariable Long id, @Valid @RequestBody FamilyDoctorRequest request) {
         PatientResponse body = patientService.updateDoctorFamily(id, request);
         return ResponseEntity.ok(body);
     }
