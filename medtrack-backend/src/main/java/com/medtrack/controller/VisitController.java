@@ -18,9 +18,8 @@ public class VisitController {
     public  VisitController(VisitService visitService) { this.visitService = visitService; }
 
     @PostMapping
-    public ResponseEntity<VisitResponse> createVisit(@Valid @RequestBody CreateVisitRequest request) {
-        VisitResponse body = visitService.createVisit(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(body);
+    public ResponseEntity<VisitResponse> create(@Valid @RequestBody CreateVisitRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(visitService.create(request));
     }
 
     @GetMapping("/patient/{patientId}")

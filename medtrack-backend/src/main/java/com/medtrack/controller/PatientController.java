@@ -23,8 +23,8 @@ public class PatientController {
     }
 
     @PostMapping
-    public ResponseEntity<PatientResponse> createPatient(@Valid @RequestBody CreatePatientRequest request) {
-        return new ResponseEntity<>(patientService.createPatient(request), HttpStatus.CREATED);
+    public ResponseEntity<PatientResponse> create(@Valid @RequestBody CreatePatientRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(patientService.create(request));
     }
 
     @PutMapping("/{id}")

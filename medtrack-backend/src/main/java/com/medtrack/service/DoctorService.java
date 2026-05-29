@@ -28,7 +28,7 @@ public class DoctorService {
     }
 
     @Transactional
-    public DoctorResponse createDoctor(CreateDoctorRequest request) {
+    public DoctorResponse create(CreateDoctorRequest request) {
         Long userId = request.getUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with ID: " + userId));

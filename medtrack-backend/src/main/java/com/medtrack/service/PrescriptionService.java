@@ -27,7 +27,7 @@ public class PrescriptionService {
         this.medicationRepository = medicationRepository;
     }
     @Transactional
-    public PrescriptionResponse createPrescription(PrescriptionRequest request) {
+    public PrescriptionResponse create(PrescriptionRequest request) {
         Long patientId = request.getPatientId();
         Long doctorId = request.getDoctorId();
         Long visitId = request.getVisitId();

@@ -33,7 +33,7 @@ public class PatientService {
     }
 
     @Transactional
-    public PatientResponse createPatient(CreatePatientRequest request) {
+    public PatientResponse create(CreatePatientRequest request) {
         Long userId = request.getUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with ID: " + userId));

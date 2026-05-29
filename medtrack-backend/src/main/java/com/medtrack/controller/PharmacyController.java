@@ -21,8 +21,7 @@ public class PharmacyController {
 
     @PostMapping
     public ResponseEntity<PharmacyResponse> create(@Valid @RequestBody PharmacyRequest request) {
-        PharmacyResponse body = pharmacyService.create(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(body);
+        return ResponseEntity.status(HttpStatus.CREATED).body(pharmacyService.create(request));
     }
 
     @GetMapping

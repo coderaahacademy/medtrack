@@ -24,7 +24,7 @@ public class VisitService {
         this.doctorRepository = doctorRepository;
     }
     @Transactional
-    public VisitResponse createVisit(CreateVisitRequest request){
+    public VisitResponse create(CreateVisitRequest request){
         Patient patient = patientRepository.findById(request.getPatientId()).orElseThrow(() -> new IllegalArgumentException("Patient not found with ID: " + request.getPatientId()));
         Doctor doctor = doctorRepository.findById(request.getDoctorId()).orElseThrow(() -> new IllegalArgumentException("Doctor not found with ID: " + request.getDoctorId()));
         Visit visit = new Visit();

@@ -22,7 +22,7 @@ public class DoctorController {
 
     @PostMapping
     public ResponseEntity<DoctorResponse> create(@Valid @RequestBody CreateDoctorRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(doctorService.createDoctor(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(doctorService.create(request));
     }
 
     @GetMapping

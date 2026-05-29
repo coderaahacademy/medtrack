@@ -26,7 +26,7 @@ public class InventoryService {
     }
 
     @Transactional
-    public InventoryResponse createInventory(InventoryRequest request) {
+    public InventoryResponse create(InventoryRequest request) {
         Long pharmacyId = request.getPharmacyId();
         Long medicationId = request.getMedicationId();
         if (inventoryRepository.existsByPharmacyIdAndMedicationId(pharmacyId, medicationId)) {
