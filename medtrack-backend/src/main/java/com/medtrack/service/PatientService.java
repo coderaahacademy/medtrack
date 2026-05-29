@@ -1,18 +1,23 @@
 package com.medtrack.service;
 
 import com.medtrack.dto.FamilyDoctorRequest;
-import com.medtrack.dto.PatientRequest;
+import com.medtrack.dto.CreatePatientRequest;
 import com.medtrack.dto.PatientResponse;
+import com.medtrack.dto.UpdatePatientRequest;
 import com.medtrack.entity.Doctor;
 import com.medtrack.entity.Patient;
 import com.medtrack.entity.User;
+import com.medtrack.entity.UserRole;
+import com.medtrack.enums.Role;
 import com.medtrack.repository.PatientRepository;
 import com.medtrack.repository.UserRepository;
 import com.medtrack.repository.DoctorRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class PatientService {
@@ -28,44 +33,40 @@ public class PatientService {
     }
 
     @Transactional
-    public PatientResponse createPatient(PatientRequest request) {
-        if (patientRepository.existsByUserId(request.getUserId())) {
-            throw new IllegalArgumentException("Patient already exists for user ID: " + request.getUserId());
+    public PatientResponse createPatient(CreatePatientRequest request) {
+        Long userId = request.getUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with ID: " + userId));
+
+        if (patientRepository.existsByUserId(userId)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Patient profile already exists for user ID: " + userId);
         }
-
-        User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + request.getUserId()));
-
         Patient patient = new Patient();
+        patient.setFullName(request.getFullName());
+        patient.setBirthDate(request.getBirthDate());
+        patient.setGender(request.getGender());
+        patient.setBloodGroup(request.getBloodGroup());
+        patient.setAllergies(request.getAllergies());
+        patient.setChronicConditions(request.getChronicConditions());
+        patient.setPhone(request.getPhone());
+        patient.setAddress(request.getAddress());
+
+        boolean hasPatientRole = user.getRoles().stream().anyMatch(r -> r.getRole() == Role.PATIENT);
+        if (!hasPatientRole) {
+            UserRole role = new UserRole();
+            role.setRole(Role.PATIENT);
+            role.setUser(user);
+            user.getRoles().add(role);
+            userRepository.save(user);
+        }
         patient.setUser(user);
-        if (request.getFamilyDoctorId() != null) {
-            patient.setFamilyDoctor(doctorRepository.findById(request.getFamilyDoctorId())
-                    .orElseThrow(() -> new IllegalArgumentException("Doctor not found with ID: " + request.getFamilyDoctorId())));
-        }
-        patient.setFullName(request.getFullName());
-        patient.setBirthDate(request.getBirthDate());
-        patient.setGender(request.getGender());
-        patient.setBloodGroup(request.getBloodGroup());
-        patient.setAllergies(request.getAllergies());
-        patient.setChronicConditions(request.getChronicConditions());
-        patient.setPhone(request.getPhone());
-        patient.setAddress(request.getAddress());
-
-        Patient saved = patientRepository.save(patient);
-        return toResponse(saved);
+        Patient savedPatient = patientRepository.save(patient);
+        return toResponse(savedPatient);
     }
-
     @Transactional
-    public PatientResponse updatePatient(Long id, PatientRequest request) {
+    public PatientResponse updatePatient(Long id, UpdatePatientRequest request) {
         Patient patient = patientRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Patient not found with ID: " + id));
-
-        if (request.getFamilyDoctorId() != null) {
-            patient.setFamilyDoctor(doctorRepository.findById(request.getFamilyDoctorId())
-                    .orElseThrow(() -> new IllegalArgumentException("Doctor not found with ID: " + request.getFamilyDoctorId())));
-        } else {
-            patient.setFamilyDoctor(null);
-        }
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found with ID: " + id));
         patient.setFullName(request.getFullName());
         patient.setBirthDate(request.getBirthDate());
         patient.setGender(request.getGender());
@@ -74,21 +75,21 @@ public class PatientService {
         patient.setChronicConditions(request.getChronicConditions());
         patient.setPhone(request.getPhone());
         patient.setAddress(request.getAddress());
-
-        Patient updated = patientRepository.save(patient);
-        return toResponse(updated);
+        Patient savedPatient = patientRepository.save(patient);
+        return toResponse(savedPatient);
     }
 
     @Transactional(readOnly = true)
     public PatientResponse getPatientById(Long id) {
         Patient patient = patientRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Patient not found with ID: " + id));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found with ID: " + id));
         return toResponse(patient);
     }
 
     @Transactional(readOnly = true)
     public Page<PatientResponse> getAllPatients(Pageable pageable) {
-        return patientRepository.findAll(pageable).map(this::toResponse);
+        Page<Patient> patientPage = patientRepository.findAll(pageable);
+        return patientPage.map(this::toResponse);
     }
 
     @Transactional
@@ -104,10 +105,14 @@ public class PatientService {
     }
 
     @Transactional
-    public void deletePatient(Long id) {
+    public String deletePatient(Long id) {
         Patient patient = patientRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Patient not found with ID: " + id));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found with ID: " + id));
+        User user = patient.getUser();
+        user.getRoles().removeIf(r -> r.getRole() == Role.PATIENT);
         patientRepository.delete(patient);
+        userRepository.saveAndFlush(user);
+        return "Patient ID " + id + " was successfully deleted.";
     }
 
     private PatientResponse toResponse(Patient patient) {

@@ -1,9 +1,6 @@
 package com.medtrack.controller;
 
-import com.medtrack.dto.FamilyDoctorRequest;
-import com.medtrack.dto.PatientRequest;
-import com.medtrack.dto.PatientResponse;
-import com.medtrack.dto.PrescriptionResponse;
+import com.medtrack.dto.*;
 import com.medtrack.service.PatientService;
 import com.medtrack.service.PrescriptionService;
 import jakarta.validation.Valid;
@@ -26,12 +23,12 @@ public class PatientController {
     }
 
     @PostMapping
-    public ResponseEntity<PatientResponse> createPatient(@Valid @RequestBody PatientRequest request) {
+    public ResponseEntity<PatientResponse> createPatient(@Valid @RequestBody CreatePatientRequest request) {
         return new ResponseEntity<>(patientService.createPatient(request), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PatientResponse> updatePatient(@PathVariable Long id, @Valid @RequestBody PatientRequest request) {
+    public ResponseEntity<PatientResponse> updatePatient(@PathVariable Long id, @Valid @RequestBody UpdatePatientRequest request) {
         return ResponseEntity.ok(patientService.updatePatient(id, request));
     }
 
@@ -58,8 +55,7 @@ public class PatientController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePatient(@PathVariable Long id) {
-        patientService.deletePatient(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<String> deletePatient(@PathVariable Long id) {
+        return ResponseEntity.ok(patientService.deletePatient(id));
     }
 }
