@@ -1,11 +1,14 @@
 package com.medtrack.controller;
 
-import com.medtrack.entity.Medication;
+import com.medtrack.dto.MedicationRequest;
+import com.medtrack.dto.MedicationResponse;
 import com.medtrack.service.MedicationService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/medications")
@@ -17,12 +20,13 @@ public class MedicationController {
     }
 
     @PostMapping
-    public ResponseEntity<Medication> create(@Valid @RequestBody Medication medication) {
-        return ResponseEntity.ok(medicationService.createMedication(medication));
+    public ResponseEntity<MedicationResponse> create(@Valid @RequestBody MedicationRequest request) {
+        MedicationResponse body = medicationService.create(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(body);
     }
 
     @GetMapping
-    public ResponseEntity<List<Medication>> getAll() {
-        return ResponseEntity.ok(medicationService.getAllMedications());
+    public ResponseEntity<Page<MedicationResponse>> getAll(Pageable pageable) {
+        return ResponseEntity.ok(medicationService.getAll(pageable));
     }
 }
