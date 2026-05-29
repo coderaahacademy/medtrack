@@ -64,7 +64,7 @@ public class PatientService {
         return toResponse(savedPatient);
     }
     @Transactional
-    public PatientResponse updatePatient(Long id, UpdatePatientRequest request) {
+    public PatientResponse update(Long id, UpdatePatientRequest request) {
         Patient patient = patientRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found with ID: " + id));
         patient.setFullName(request.getFullName());

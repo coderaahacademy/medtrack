@@ -57,7 +57,7 @@ public class DoctorService {
     }
 
     @Transactional
-    public DoctorResponse updateDoctor(Long id, UpdateDoctorRequest request) {
+    public DoctorResponse update(Long id, UpdateDoctorRequest request) {
         Doctor doctor = doctorRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Doctor not found with ID: " + id));
         doctor.setFullName(request.getFullName());

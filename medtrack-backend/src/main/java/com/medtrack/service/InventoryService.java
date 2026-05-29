@@ -46,7 +46,7 @@ public class InventoryService {
     }
 
     @Transactional
-    public InventoryResponse updateInventory(InventoryRequest request) {
+    public InventoryResponse update(InventoryRequest request) {
         PharmacyInventory inventory = inventoryRepository.findByPharmacyIdAndMedicationId(request.getPharmacyId(),request.getMedicationId())
                 .orElseThrow(() -> new IllegalArgumentException("Inventory record not found."));
         inventory.setQuantityAvailable(request.getQuantityAvailable());

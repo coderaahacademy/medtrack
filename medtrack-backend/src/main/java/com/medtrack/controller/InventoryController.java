@@ -23,8 +23,7 @@ public class InventoryController {
     }
 
     @PutMapping
-    public ResponseEntity<InventoryResponse>  updateInventory(@Valid @RequestBody InventoryRequest request) {
-        InventoryResponse body = inventoryService.updateInventory(request);
-        return ResponseEntity.ok(body);
+    public ResponseEntity<InventoryResponse> update(@Valid @RequestBody InventoryRequest request) {
+        return ResponseEntity.ok(inventoryService.update(request));
     }
 }

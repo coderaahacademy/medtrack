@@ -38,8 +38,8 @@ public class PatientController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PatientResponse> updatePatient(@PathVariable Long id, @Valid @RequestBody UpdatePatientRequest request) {
-        return ResponseEntity.ok(patientService.updatePatient(id, request));
+    public ResponseEntity<PatientResponse> update(@PathVariable Long id, @Valid @RequestBody UpdatePatientRequest request) {
+        return ResponseEntity.ok(patientService.update(id, request));
     }
 
     @GetMapping("/{id}/prescriptions")
