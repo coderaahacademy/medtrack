@@ -21,8 +21,7 @@ public class PrescriptionController {
     }
 
     @PostMapping
-    public ResponseEntity<PrescriptionResponse> createPrescription(@Valid @RequestBody PrescriptionRequest request) {
-        PrescriptionResponse body = prescriptionService.createPrescription(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(body);
+    public ResponseEntity<PrescriptionResponse> create(@Valid @RequestBody PrescriptionRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(prescriptionService.create(request));
     }
 }

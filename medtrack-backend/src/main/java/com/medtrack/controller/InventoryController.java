@@ -18,14 +18,12 @@ public class InventoryController {
     }
 
     @PostMapping
-    public ResponseEntity<InventoryResponse>  createInventory(@Valid @RequestBody InventoryRequest request) {
-        InventoryResponse body = inventoryService.createInventory(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(body);
+    public ResponseEntity<InventoryResponse> create(@Valid @RequestBody InventoryRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(inventoryService.create(request));
     }
 
     @PutMapping
-    public ResponseEntity<InventoryResponse>  updateInventory(@Valid @RequestBody InventoryRequest request) {
-        InventoryResponse body = inventoryService.updateInventory(request);
-        return ResponseEntity.ok(body);
+    public ResponseEntity<InventoryResponse> update(@Valid @RequestBody InventoryRequest request) {
+        return ResponseEntity.ok(inventoryService.update(request));
     }
 }
