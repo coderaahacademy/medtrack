@@ -8,8 +8,10 @@ import com.medtrack.entity.PharmacyInventory;
 import com.medtrack.repository.MedicationRepository;
 import com.medtrack.repository.InventoryRepository;
 import com.medtrack.repository.PharmacyRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class InventoryService {
@@ -30,29 +32,27 @@ public class InventoryService {
         Long pharmacyId = request.getPharmacyId();
         Long medicationId = request.getMedicationId();
         if (inventoryRepository.existsByPharmacyIdAndMedicationId(pharmacyId, medicationId)) {
-            throw new IllegalArgumentException("Inventory record already exists for this pharmacy and medication.");
+            throw new ResponseStatusException(HttpStatus.CONFLICT,"Inventory record already exists for this pharmacy and medication.");
         }
         Pharmacy pharmacy = pharmacyRepository.findById(pharmacyId)
-                .orElseThrow(() -> new IllegalArgumentException("Pharmacy not found by id: " + pharmacyId));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Pharmacy not found by id: " + pharmacyId));
         Medication medication = medicationRepository.findById(medicationId)
-                .orElseThrow(() -> new IllegalArgumentException("Medication not found by id: " + medicationId));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Medication not found by id: " + medicationId));
         PharmacyInventory inventory = new PharmacyInventory();
         inventory.setPharmacy(pharmacy);
         inventory.setMedication(medication);
         inventory.setQuantityAvailable(request.getQuantityAvailable());
         inventory.setMinimumStock(request.getMinimumStock());
-        PharmacyInventory savedInventory = inventoryRepository.saveAndFlush(inventory);
-        return toResponse(savedInventory);
+        return toResponse(inventoryRepository.saveAndFlush(inventory));
     }
 
     @Transactional
     public InventoryResponse update(InventoryRequest request) {
         PharmacyInventory inventory = inventoryRepository.findByPharmacyIdAndMedicationId(request.getPharmacyId(),request.getMedicationId())
-                .orElseThrow(() -> new IllegalArgumentException("Inventory record not found."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Inventory record not found."));
         inventory.setQuantityAvailable(request.getQuantityAvailable());
         inventory.setMinimumStock(request.getMinimumStock());
-        PharmacyInventory savedInventory = inventoryRepository.saveAndFlush(inventory);
-        return toResponse(savedInventory);
+        return toResponse(inventoryRepository.saveAndFlush(inventory));
     }
 
     private InventoryResponse toResponse(PharmacyInventory inventory) {
