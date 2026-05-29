@@ -93,7 +93,7 @@ public class PatientService {
     }
 
     @Transactional
-    public PatientResponse updateDoctorFamily(Long id, FamilyDoctorRequest request){
+    public PatientResponse updateFamilyDoctor(Long id, FamilyDoctorRequest request){
         Long doctorId = request.getFamilyDoctorId();
         Patient patient = patientRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Patient not found with ID: " + id));

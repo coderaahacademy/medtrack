@@ -62,7 +62,7 @@ public class PrescriptionService {
     }
 
     @Transactional(readOnly = true)
-    public Page<PrescriptionResponse> getPatientPrescriptions(Long patientId, Pageable pageable) {
+    public Page<PrescriptionResponse> getPrescriptions(Long patientId, Pageable pageable) {
         Page<Prescription> prescriptions = prescriptionRepository.findByPatientId(patientId, pageable);
         return prescriptions.map(this::toResponse);
     }

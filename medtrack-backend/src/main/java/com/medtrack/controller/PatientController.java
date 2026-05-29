@@ -43,15 +43,13 @@ public class PatientController {
     }
 
     @GetMapping("/{id}/prescriptions")
-    public ResponseEntity<Page<PrescriptionResponse>> getPatientPrescriptions(@PathVariable Long id, Pageable pageable) {
-        Page<PrescriptionResponse> prescriptions = prescriptionService.getPatientPrescriptions(id, pageable);
-        return ResponseEntity.ok(prescriptions);
+    public ResponseEntity<Page<PrescriptionResponse>> getPrescriptions(@PathVariable Long id, Pageable pageable) {
+        return ResponseEntity.ok(prescriptionService.getPrescriptions(id, pageable));
     }
 
     @PatchMapping("/{id}/family-doctor")
     public ResponseEntity<PatientResponse> updateFamilyDoctor(@PathVariable Long id, @Valid @RequestBody FamilyDoctorRequest request) {
-        PatientResponse body = patientService.updateDoctorFamily(id, request);
-        return ResponseEntity.ok(body);
+        return ResponseEntity.ok(patientService.updateFamilyDoctor(id, request));
     }
 
     @DeleteMapping("/{id}")
