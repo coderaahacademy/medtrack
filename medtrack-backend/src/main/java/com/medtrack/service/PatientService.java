@@ -80,7 +80,7 @@ public class PatientService {
     }
 
     @Transactional(readOnly = true)
-    public PatientResponse getPatientById(Long id) {
+    public PatientResponse getById(Long id) {
         Patient patient = patientRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found with ID: " + id));
         return toResponse(patient);

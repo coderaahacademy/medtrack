@@ -70,7 +70,7 @@ public class DoctorService {
     }
 
     @Transactional(readOnly = true)
-    public DoctorResponse getDoctorById(Long id) {
+    public DoctorResponse getById(Long id) {
         Doctor doctor = doctorRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Doctor not found with ID: " + id));
         return toResponse(doctor);

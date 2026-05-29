@@ -32,14 +32,14 @@ public class PatientController {
         return ResponseEntity.ok(patientService.getAll(pageable));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<PatientResponse> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(patientService.getById(id));
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<PatientResponse> updatePatient(@PathVariable Long id, @Valid @RequestBody UpdatePatientRequest request) {
         return ResponseEntity.ok(patientService.updatePatient(id, request));
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<PatientResponse> getPatientById(@PathVariable Long id) {
-        return ResponseEntity.ok(patientService.getPatientById(id));
     }
 
     @GetMapping("/{id}/prescriptions")

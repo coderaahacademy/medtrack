@@ -40,7 +40,7 @@ public class VisitService {
     }
 
     @Transactional(readOnly = true)
-    public Page<VisitResponse> getVisitsByPatientId(Long id, Pageable pageable) {
+    public Page<VisitResponse> getByPatientId(Long id, Pageable pageable) {
         Page<Visit> visitPage = visitRepository.findByPatientId(id, pageable);
         return visitPage.map(this::toResponse);
     }

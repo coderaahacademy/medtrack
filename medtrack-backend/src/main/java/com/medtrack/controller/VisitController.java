@@ -23,9 +23,8 @@ public class VisitController {
     }
 
     @GetMapping("/patient/{patientId}")
-    public ResponseEntity<Page<VisitResponse>> getVisitsByPatientId(
+    public ResponseEntity<Page<VisitResponse>> getByPatientId(
             @PathVariable Long patientId, Pageable pageable) {
-        Page<VisitResponse> visits = visitService.getVisitsByPatientId(patientId, pageable);
-        return ResponseEntity.ok(visits);
+        return ResponseEntity.ok(visitService.getByPatientId(patientId, pageable));
     }
 }
