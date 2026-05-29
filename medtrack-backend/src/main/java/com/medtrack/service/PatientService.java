@@ -57,11 +57,10 @@ public class PatientService {
             role.setRole(Role.PATIENT);
             role.setUser(user);
             user.getRoles().add(role);
-            userRepository.save(user);
+            userRepository.saveAndFlush(user);
         }
         patient.setUser(user);
-        Patient savedPatient = patientRepository.save(patient);
-        return toResponse(savedPatient);
+        return toResponse(patientRepository.saveAndFlush(patient));
     }
     @Transactional
     public PatientResponse update(Long id, UpdatePatientRequest request) {
@@ -75,8 +74,7 @@ public class PatientService {
         patient.setChronicConditions(request.getChronicConditions());
         patient.setPhone(request.getPhone());
         patient.setAddress(request.getAddress());
-        Patient savedPatient = patientRepository.save(patient);
-        return toResponse(savedPatient);
+        return toResponse(patientRepository.saveAndFlush(patient));
     }
 
     @Transactional(readOnly = true)
@@ -88,20 +86,18 @@ public class PatientService {
 
     @Transactional(readOnly = true)
     public Page<PatientResponse> getAll(Pageable pageable) {
-        Page<Patient> patientPage = patientRepository.findAll(pageable);
-        return patientPage.map(this::toResponse);
+        return patientRepository.findAll(pageable).map(this::toResponse);
     }
 
     @Transactional
     public PatientResponse updateFamilyDoctor(Long id, FamilyDoctorRequest request){
         Long doctorId = request.getFamilyDoctorId();
         Patient patient = patientRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Patient not found with ID: " + id));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Patient not found with ID: " + id));
         Doctor doctor = doctorRepository.findById(doctorId)
-                .orElseThrow(() -> new IllegalArgumentException("Doctor not found with ID: " + doctorId));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Doctor not found with ID: " + doctorId));
         patient.setFamilyDoctor(doctor);
-        Patient savedPatient = patientRepository.saveAndFlush(patient);
-        return toResponse(savedPatient);
+        return toResponse(patientRepository.saveAndFlush(patient));
     }
 
     @Transactional
@@ -117,8 +113,6 @@ public class PatientService {
 
     private PatientResponse toResponse(Patient patient) {
         PatientResponse response = new PatientResponse();
-        response.setId(patient.getId());
-        response.setUserId(patient.getUser().getId());
         if (patient.getFamilyDoctor() != null) {
             response.setFamilyDoctorId(patient.getFamilyDoctor().getId());
         }
@@ -132,6 +126,8 @@ public class PatientService {
         response.setAddress(patient.getAddress());
         response.setCreatedAt(patient.getCreatedAt());
         response.setUpdatedAt(patient.getUpdatedAt());
+        response.setUserId(patient.getUser().getId());
+        response.setId(patient.getId());
         return response;
     }
 }
