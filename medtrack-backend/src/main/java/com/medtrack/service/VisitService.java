@@ -18,13 +18,15 @@ public class VisitService {
     private final VisitRepository visitRepository;
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
+
     public VisitService(VisitRepository visitRepository, PatientRepository patientRepository, DoctorRepository doctorRepository) {
         this.visitRepository = visitRepository;
         this.patientRepository = patientRepository;
         this.doctorRepository = doctorRepository;
     }
+
     @Transactional
-    public VisitResponse createVisit(CreateVisitRequest request){
+    public VisitResponse createVisit(CreateVisitRequest request) {
         Patient patient = patientRepository.findById(request.getPatientId()).orElseThrow(() -> new IllegalArgumentException("Patient not found with ID: " + request.getPatientId()));
         Doctor doctor = doctorRepository.findById(request.getDoctorId()).orElseThrow(() -> new IllegalArgumentException("Doctor not found with ID: " + request.getDoctorId()));
         Visit visit = new Visit();
@@ -45,7 +47,7 @@ public class VisitService {
         return visitPage.map(this::toResponse);
     }
 
-    public VisitResponse toResponse(Visit visit){
+    public VisitResponse toResponse(Visit visit) {
         VisitResponse response = new VisitResponse();
         response.setId(visit.getId());
         response.setVisitDate(visit.getVisitDate());
@@ -58,5 +60,22 @@ public class VisitService {
         response.setCreatedAt(visit.getCreatedAt());
         response.setUpdatedAt(visit.getUpdatedAt());
         return response;
+    }
+
+    @Transactional
+    public void addNoteToVisit(Long visitId, String note) {
+        Visit visit = visitRepository.findById(visitId)
+                .orElseThrow(() -> new IllegalArgumentException("Visit not found with ID: " + visitId));
+        visit.setNotes(note);
+        visitRepository.save(visit);
+    }
+
+    @Transactional(readOnly = true)
+    public String getNoteByVisitID(Long visitId) {
+        Visit visit = visitRepository.findById(visitId)
+                .orElseThrow(() -> new IllegalArgumentException("Visit not found with ID:" + visitId));
+        return visit.getNotes() != null ? visit.getNotes() : "";
+
+
     }
 }

@@ -29,4 +29,19 @@ public class VisitController {
         Page<VisitResponse> visits = visitService.getVisitsByPatientId(patientId, pageable);
         return ResponseEntity.ok(visits);
     }
+
+    @PostMapping("/{visitId}/notes")
+    public ResponseEntity<Void> createVisitNote(
+            @PathVariable Long visitId,
+            @RequestBody String note){
+        visitService.addNoteToVisit(visitId, note);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @GetMapping("/{visitId}/notes")
+    public ResponseEntity<String> getVisitNotes(@PathVariable Long visitId){
+        String currentNote = visitService.getNoteByVisitID(visitId);
+        return ResponseEntity.ok(currentNote);
+
+    }
 }
