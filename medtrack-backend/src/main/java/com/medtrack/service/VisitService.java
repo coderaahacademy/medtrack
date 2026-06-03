@@ -1,5 +1,6 @@
 package com.medtrack.service;
 
+import com.medtrack.dto.NotesResponse;
 import com.medtrack.entity.Doctor;
 import com.medtrack.entity.Patient;
 import com.medtrack.entity.Visit;
@@ -12,6 +13,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.medtrack.dto.NotesRequest;
+import com.medtrack.dto.NotesResponse;
+
 
 @Service
 public class VisitService {
@@ -63,19 +67,29 @@ public class VisitService {
     }
 
     @Transactional
-    public void addNoteToVisit(Long visitId, String note) {
+    public NotesResponse addNoteToVisit(Long visitId, NotesRequest request) {
         Visit visit = visitRepository.findById(visitId)
                 .orElseThrow(() -> new IllegalArgumentException("Visit not found with ID: " + visitId));
-        visit.setNotes(note);
+        visit.setNotes(request.getNotes());
         visitRepository.save(visit);
+
+        NotesResponse response = new NotesResponse();
+        response.setVisitId(visit.getId());
+        response.setNotes(visit.getNotes());
+        response.setUpdatedAt(visit.getUpdatedAt());
+        return response;
+
     }
 
     @Transactional(readOnly = true)
-    public String getNoteByVisitID(Long visitId) {
+    public NotesResponse getNoteByVisitID(Long visitId) {
         Visit visit = visitRepository.findById(visitId)
                 .orElseThrow(() -> new IllegalArgumentException("Visit not found with ID:" + visitId));
-        return visit.getNotes() != null ? visit.getNotes() : "";
 
-
+        NotesResponse response = new NotesResponse();
+        response.setVisitId(visit.getId());
+        response.setNotes(visit.getNotes() != null ? visit.getNotes() : "");
+        response.setUpdatedAt(visit.getUpdatedAt());
+        return response;
     }
 }

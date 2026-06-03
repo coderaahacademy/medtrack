@@ -1,7 +1,9 @@
 package com.medtrack.controller;
 
 import com.medtrack.dto.CreateVisitRequest;
+import com.medtrack.dto.NotesResponse;
 import com.medtrack.dto.VisitResponse;
+import com.medtrack.dto.NotesRequest;
 import com.medtrack.service.VisitService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -31,17 +33,16 @@ public class VisitController {
     }
 
     @PostMapping("/{visitId}/notes")
-    public ResponseEntity<Void> createVisitNote(
+    public ResponseEntity<NotesResponse> createVisitNote(
             @PathVariable Long visitId,
-            @RequestBody String note){
-        visitService.addNoteToVisit(visitId, note);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+            @Valid @RequestBody NotesRequest request){
+        NotesResponse response = visitService.addNoteToVisit(visitId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/{visitId}/notes")
-    public ResponseEntity<String> getVisitNotes(@PathVariable Long visitId){
-        String currentNote = visitService.getNoteByVisitID(visitId);
-        return ResponseEntity.ok(currentNote);
-
+    public ResponseEntity<NotesResponse> getVisitNotes(@PathVariable Long visitId){
+        NotesResponse response = visitService.getNoteByVisitID(visitId);
+        return ResponseEntity.ok(response);
     }
 }
