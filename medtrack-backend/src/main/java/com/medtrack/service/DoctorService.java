@@ -28,7 +28,7 @@ public class DoctorService {
     }
 
     @Transactional
-    public DoctorResponse createDoctor(CreateDoctorRequest request) {
+    public DoctorResponse create(CreateDoctorRequest request) {
         Long userId = request.getUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with ID: " + userId));
@@ -49,15 +49,14 @@ public class DoctorService {
             role.setRole(Role.DOCTOR);
             role.setUser(user);
             user.getRoles().add(role);
-            userRepository.save(user);
+            userRepository.saveAndFlush(user);
         }
         doctor.setUser(user);
-        Doctor savedDoctor = doctorRepository.save(doctor);
-        return toResponse(savedDoctor);
+        return toResponse(doctorRepository.saveAndFlush(doctor));
     }
 
     @Transactional
-    public DoctorResponse updateDoctor(Long id, UpdateDoctorRequest request) {
+    public DoctorResponse update(Long id, UpdateDoctorRequest request) {
         Doctor doctor = doctorRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Doctor not found with ID: " + id));
         doctor.setFullName(request.getFullName());
@@ -65,25 +64,23 @@ public class DoctorService {
         doctor.setLicenseNumber(request.getLicenseNumber());
         doctor.setPhone(request.getPhone());
         doctor.setActive(request.isActive());
-        Doctor savedDoctor = doctorRepository.save(doctor);
-        return toResponse(savedDoctor);
+        return toResponse(doctorRepository.saveAndFlush(doctor));
     }
 
     @Transactional(readOnly = true)
-    public DoctorResponse getDoctorById(Long id) {
+    public DoctorResponse getById(Long id) {
         Doctor doctor = doctorRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Doctor not found with ID: " + id));
         return toResponse(doctor);
     }
 
     @Transactional(readOnly = true)
-    public Page<DoctorResponse> getAllDoctors(Pageable pageable) {
-        Page<Doctor> doctorPage = doctorRepository.findAll(pageable);
-        return doctorPage.map(this::toResponse);
+    public Page<DoctorResponse> getAll(Pageable pageable) {
+        return doctorRepository.findAll(pageable).map(this::toResponse);
     }
 
     @Transactional
-    public String deleteDoctor(Long id) {
+    public String delete(Long id) {
         Doctor doctor = doctorRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Doctor not found with ID: " + id));
         User user = doctor.getUser();
@@ -96,8 +93,6 @@ public class DoctorService {
 
     private DoctorResponse toResponse(Doctor doctor) {
         DoctorResponse response = new DoctorResponse();
-        response.setId(doctor.getId());
-        response.setUserId(doctor.getUser().getId());
         response.setFullName(doctor.getFullName());
         response.setSpecialization(doctor.getSpecialization());
         response.setLicenseNumber(doctor.getLicenseNumber());
@@ -105,6 +100,8 @@ public class DoctorService {
         response.setActive(doctor.isActive());
         response.setCreatedAt(doctor.getCreatedAt());
         response.setUpdatedAt(doctor.getUpdatedAt());
+        response.setUserId(doctor.getUser().getId());
+        response.setId(doctor.getId());
         return response;
     }
 }

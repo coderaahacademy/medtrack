@@ -23,8 +23,7 @@ public class PharmacyService {
         pharmacy.setPhone(request.getPhone());
         pharmacy.setEmail(request.getEmail());
         pharmacy.setActive(request.isActive());
-        Pharmacy saved = pharmacyRepository.saveAndFlush(pharmacy);
-        return toResponse(saved);
+        return toResponse(pharmacyRepository.saveAndFlush(pharmacy));
     }
 
     public Page<PharmacyResponse> getAll(Pageable pageable){

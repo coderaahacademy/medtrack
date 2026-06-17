@@ -4,11 +4,11 @@ import jakarta.validation.constraints.*;
 
 import java.time.LocalDate;
 
-public class PatientRequest {
+public class CreatePatientRequest {
+
     @NotNull(message = "User ID is required")
     @Positive(message = "User ID must be a positive number")
     private Long userId;
-    private Long familyDoctorId;
     @NotBlank(message = "Full name cannot be empty")
     @Size(min = 2, max = 100, message = "Full name must be between 2 and 100 characters")
     private String fullName;
@@ -35,10 +35,10 @@ public class PatientRequest {
     @Size(min = 5, max = 255, message = "Address must be between 5 and 255 characters")
     private String address;
 
+    public CreatePatientRequest() {}
+
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
-    public Long getFamilyDoctorId() { return familyDoctorId; }
-    public void setFamilyDoctorId(Long familyDoctorId) { this.familyDoctorId = familyDoctorId; }
     public String getFullName() { return fullName; }
     public void setFullName(String fullName) { this.fullName = fullName; }
     public LocalDate getBirthDate() { return birthDate; }
