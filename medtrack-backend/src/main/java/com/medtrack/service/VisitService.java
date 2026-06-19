@@ -11,6 +11,7 @@ import com.medtrack.repository.PatientRepository;
 import com.medtrack.repository.VisitRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.medtrack.dto.NotesRequest;
@@ -30,9 +31,13 @@ public class VisitService {
     }
 
     @Transactional
-    public VisitResponse createVisit(CreateVisitRequest request) {
-        Patient patient = patientRepository.findById(request.getPatientId()).orElseThrow(() -> new IllegalArgumentException("Patient not found with ID: " + request.getPatientId()));
-        Doctor doctor = doctorRepository.findById(request.getDoctorId()).orElseThrow(() -> new IllegalArgumentException("Doctor not found with ID: " + request.getDoctorId()));
+    public VisitResponse create(CreateVisitRequest request){
+        Long patientId = request.getPatientId();
+        Long doctorId = request.getDoctorId();
+        Patient patient = patientRepository.findById(patientId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Patient not found with ID: " + patientId));
+        Doctor doctor = doctorRepository.findById(doctorId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Doctor not found with ID: " + doctorId));
         Visit visit = new Visit();
         visit.setPatient(patient);
         visit.setDoctor(doctor);
@@ -41,28 +46,26 @@ public class VisitService {
         visit.setDiagnosis(request.getDiagnosis());
         visit.setNotes(request.getNotes());
         visit.setFollowUpDate(request.getFollowUpDate());
-        Visit savedVisit = visitRepository.saveAndFlush(visit);
-        return toResponse(savedVisit);
+        return toResponse(visitRepository.saveAndFlush(visit));
     }
 
     @Transactional(readOnly = true)
-    public Page<VisitResponse> getVisitsByPatientId(Long id, Pageable pageable) {
-        Page<Visit> visitPage = visitRepository.findByPatientId(id, pageable);
-        return visitPage.map(this::toResponse);
+    public Page<VisitResponse> getByPatientId(Long id, Pageable pageable) {
+        return visitRepository.findByPatientId(id, pageable).map(this::toResponse);
     }
 
     public VisitResponse toResponse(Visit visit) {
         VisitResponse response = new VisitResponse();
-        response.setId(visit.getId());
         response.setVisitDate(visit.getVisitDate());
         response.setSymptoms(visit.getSymptoms());
         response.setDiagnosis(visit.getDiagnosis());
         response.setNotes(visit.getNotes());
         response.setFollowUpDate(visit.getFollowUpDate());
-        response.setPatientId(visit.getPatient().getId());
-        response.setDoctorId(visit.getDoctor().getId());
         response.setCreatedAt(visit.getCreatedAt());
         response.setUpdatedAt(visit.getUpdatedAt());
+        response.setPatientId(visit.getPatient().getId());
+        response.setDoctorId(visit.getDoctor().getId());
+        response.setId(visit.getId());
         return response;
     }
 

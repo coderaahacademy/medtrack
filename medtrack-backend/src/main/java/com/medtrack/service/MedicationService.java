@@ -27,8 +27,7 @@ public class MedicationService {
         medication.setStrength(request.getStrength());
         medication.setRequiresPrescription(request.isRequiresPrescription());
         medication.setActive(request.isActive());
-        Medication saved = medicationRepository.saveAndFlush(medication);
-        return toResponse(saved);
+        return toResponse(medicationRepository.saveAndFlush(medication));
     }
 
     public Page<MedicationResponse> getAll(Pageable pageable) {
