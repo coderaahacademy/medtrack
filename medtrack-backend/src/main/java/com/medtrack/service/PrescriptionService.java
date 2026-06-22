@@ -98,4 +98,10 @@ public class PrescriptionService {
         response.setUpdatedAt(prescriptionItem.getUpdatedAt());
         return response;
     }
+
+    @Transactional(readOnly = true)
+    public Page<PrescriptionResponse> getAllPrescriptions (Pageable pageable) {
+        Page<Prescription> prescriptions = prescriptionRepository.findAll(pageable);
+        return prescriptions.map(this::toResponse);
+    }
 }
