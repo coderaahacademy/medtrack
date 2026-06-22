@@ -28,4 +28,21 @@ public class MedicationController {
     public ResponseEntity<Page<MedicationResponse>> getAll(Pageable pageable) {
         return ResponseEntity.ok(medicationService.getAll(pageable));
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<MedicationResponse> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(medicationService.getById(id));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<MedicationResponse> update(
+            @PathVariable Long id,
+            @Valid @RequestBody MedicationRequest request) {
+        return ResponseEntity.ok(medicationService.update(id, request));
+    }
+
+    @PatchMapping("/{id}/deactivate")
+    public ResponseEntity<String> deactivate(@PathVariable Long id) {
+        return ResponseEntity.ok(medicationService.deactivate(id));
+    }
 }

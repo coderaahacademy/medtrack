@@ -6,8 +6,11 @@ import com.medtrack.entity.Medication;
 import com.medtrack.repository.MedicationRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+import java.util.Optional;
 
 @Service
 public class MedicationService {
@@ -19,7 +22,58 @@ public class MedicationService {
 
     @Transactional
     public MedicationResponse create(MedicationRequest request) {
+        Optional<Medication> existing = getExisting(request);
+        if (existing.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "A medication with this exact profile already exists. ID: " + existing.get().getId());
+        }
+
         Medication medication = new Medication();
+        mapRequestToEntity(request, medication);
+        return toResponse(medicationRepository.saveAndFlush(medication));
+    }
+
+    public Page<MedicationResponse> getAll(Pageable pageable) {
+        return medicationRepository.findAllByActiveTrue(pageable).map(this::toResponse);
+    }
+
+    public MedicationResponse getById(Long id) {
+        return toResponse(getOrThrow(id));
+    }
+
+    @Transactional
+    public MedicationResponse update(Long id, MedicationRequest request) {
+        Medication medication = getOrThrow(id);
+
+        Optional<Medication> duplicate = getExisting(request);
+        if (duplicate.isPresent() && !duplicate.get().getId().equals(id)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Update failed. Another medication already exists with this exact profile. ID: " + duplicate.get().getId());
+        }
+
+        mapRequestToEntity(request, medication);
+        return toResponse(medicationRepository.saveAndFlush(medication));
+    }
+
+    @Transactional
+    public String deactivate(Long id) {
+        Medication medication = getOrThrow(id);
+        medication.setActive(false);
+        medicationRepository.saveAndFlush(medication);
+        return "Medication ID " + id + " was successfully deactivated.";
+    }
+
+    private Optional<Medication> getExisting(MedicationRequest request) {
+        return medicationRepository.findFirstByNameIgnoreCaseAndGenericNameIgnoreCaseAndBrandIgnoreCaseAndDosageFormIgnoreCaseAndStrengthIgnoreCase(
+                request.getName(), request.getGenericName(), request.getBrand(), request.getDosageForm(), request.getStrength());
+    }
+
+    private Medication getOrThrow(Long id) {
+        return medicationRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Medication not found with id: " + id));
+    }
+
+    private void mapRequestToEntity(MedicationRequest request, Medication medication) {
         medication.setName(request.getName());
         medication.setGenericName(request.getGenericName());
         medication.setBrand(request.getBrand());
@@ -27,11 +81,6 @@ public class MedicationService {
         medication.setStrength(request.getStrength());
         medication.setRequiresPrescription(request.isRequiresPrescription());
         medication.setActive(request.isActive());
-        return toResponse(medicationRepository.saveAndFlush(medication));
-    }
-
-    public Page<MedicationResponse> getAll(Pageable pageable) {
-        return medicationRepository.findAll(pageable).map(this::toResponse);
     }
 
     private MedicationResponse toResponse(Medication medication) {
