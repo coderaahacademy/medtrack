@@ -1,6 +1,5 @@
 package com.medtrack.service;
 
-import com.medtrack.dto.NotesResponse;
 import com.medtrack.entity.Doctor;
 import com.medtrack.entity.Patient;
 import com.medtrack.entity.Visit;
@@ -16,7 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.medtrack.dto.NotesRequest;
 import com.medtrack.dto.NotesResponse;
-
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class VisitService {
