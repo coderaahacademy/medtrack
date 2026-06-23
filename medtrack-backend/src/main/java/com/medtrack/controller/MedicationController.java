@@ -29,6 +29,16 @@ public class MedicationController {
         return ResponseEntity.ok(medicationService.getAll(pageable));
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<Page<MedicationResponse>> search(
+            @RequestParam(name = "q", required = false) String q,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String genericName,
+            @RequestParam(required = false) String brand,
+            Pageable pageable) {
+        return ResponseEntity.ok(medicationService.search(q, name, genericName, brand, pageable));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<MedicationResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(medicationService.getById(id));
