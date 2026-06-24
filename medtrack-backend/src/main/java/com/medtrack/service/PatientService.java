@@ -1,23 +1,20 @@
 package com.medtrack.service;
 
-import com.medtrack.dto.FamilyDoctorRequest;
-import com.medtrack.dto.CreatePatientRequest;
-import com.medtrack.dto.PatientResponse;
-import com.medtrack.dto.UpdatePatientRequest;
+import com.medtrack.dto.*;
 import com.medtrack.entity.Doctor;
 import com.medtrack.entity.Patient;
 import com.medtrack.entity.User;
 import com.medtrack.entity.UserRole;
 import com.medtrack.enums.Role;
+import com.medtrack.exception.DoctorNotFoundException;
+import com.medtrack.exception.PatientNotFoundException;
+import com.medtrack.repository.DoctorRepository;
 import com.medtrack.repository.PatientRepository;
 import com.medtrack.repository.UserRepository;
-import com.medtrack.repository.DoctorRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class PatientService {
@@ -26,7 +23,9 @@ public class PatientService {
     private final UserRepository userRepository;
     private final DoctorRepository doctorRepository;
 
-    public PatientService(PatientRepository patientRepository, UserRepository userRepository, DoctorRepository doctorRepository) {
+    public PatientService(PatientRepository patientRepository,
+                          UserRepository userRepository,
+                          DoctorRepository doctorRepository) {
         this.patientRepository = patientRepository;
         this.userRepository = userRepository;
         this.doctorRepository = doctorRepository;
@@ -34,13 +33,20 @@ public class PatientService {
 
     @Transactional
     public PatientResponse create(CreatePatientRequest request) {
+
         Long userId = request.getUserId();
+
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with ID: " + userId));
+                .orElseThrow(() ->
+                        new PatientNotFoundException("User not found with ID: " + userId)
+                );
 
         if (patientRepository.existsByUserId(userId)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Patient profile already exists for user ID: " + userId);
+            throw new IllegalArgumentException(
+                    "Patient profile already exists for user ID: " + userId
+            );
         }
+
         Patient patient = new Patient();
         patient.setFullName(request.getFullName());
         patient.setBirthDate(request.getBirthDate());
@@ -51,7 +57,10 @@ public class PatientService {
         patient.setPhone(request.getPhone());
         patient.setAddress(request.getAddress());
 
-        boolean hasPatientRole = user.getRoles().stream().anyMatch(r -> r.getRole() == Role.PATIENT);
+        boolean hasPatientRole = user.getRoles()
+                .stream()
+                .anyMatch(r -> r.getRole() == Role.PATIENT);
+
         if (!hasPatientRole) {
             UserRole role = new UserRole();
             role.setRole(Role.PATIENT);
@@ -59,13 +68,20 @@ public class PatientService {
             user.getRoles().add(role);
             userRepository.saveAndFlush(user);
         }
+
         patient.setUser(user);
+
         return toResponse(patientRepository.saveAndFlush(patient));
     }
+
     @Transactional
     public PatientResponse update(Long id, UpdatePatientRequest request) {
+
         Patient patient = patientRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found with ID: " + id));
+                .orElseThrow(() ->
+                        new PatientNotFoundException("Patient not found with ID: " + id)
+                );
+
         patient.setFullName(request.getFullName());
         patient.setBirthDate(request.getBirthDate());
         patient.setGender(request.getGender());
@@ -74,13 +90,18 @@ public class PatientService {
         patient.setChronicConditions(request.getChronicConditions());
         patient.setPhone(request.getPhone());
         patient.setAddress(request.getAddress());
+
         return toResponse(patientRepository.saveAndFlush(patient));
     }
 
     @Transactional(readOnly = true)
     public PatientResponse getById(Long id) {
+
         Patient patient = patientRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found with ID: " + id));
+                .orElseThrow(() ->
+                        new PatientNotFoundException("Patient not found with ID: " + id)
+                );
+
         return toResponse(patient);
     }
 
@@ -90,32 +111,52 @@ public class PatientService {
     }
 
     @Transactional
-    public PatientResponse updateFamilyDoctor(Long id, FamilyDoctorRequest request){
+    public PatientResponse updateFamilyDoctor(Long id, FamilyDoctorRequest request) {
+
         Long doctorId = request.getFamilyDoctorId();
+
         Patient patient = patientRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Patient not found with ID: " + id));
+                .orElseThrow(() ->
+                        new PatientNotFoundException("Patient not found with ID: " + id)
+                );
+
         Doctor doctor = doctorRepository.findById(doctorId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Doctor not found with ID: " + doctorId));
+                .orElseThrow(() ->
+                        new DoctorNotFoundException("Doctor not found with ID: " + doctorId)
+                );
+
         patient.setFamilyDoctor(doctor);
+
         return toResponse(patientRepository.saveAndFlush(patient));
     }
 
     @Transactional
     public String delete(Long id) {
+
         Patient patient = patientRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found with ID: " + id));
+                .orElseThrow(() ->
+                        new PatientNotFoundException("Patient not found with ID: " + id)
+                );
+
         User user = patient.getUser();
+
         user.getRoles().removeIf(r -> r.getRole() == Role.PATIENT);
+
         patientRepository.delete(patient);
+
         userRepository.saveAndFlush(user);
+
         return "Patient ID " + id + " was successfully deleted.";
     }
 
     private PatientResponse toResponse(Patient patient) {
+
         PatientResponse response = new PatientResponse();
+
         if (patient.getFamilyDoctor() != null) {
             response.setFamilyDoctorId(patient.getFamilyDoctor().getId());
         }
+
         response.setFullName(patient.getFullName());
         response.setBirthDate(patient.getBirthDate());
         response.setGender(patient.getGender());
@@ -126,8 +167,11 @@ public class PatientService {
         response.setAddress(patient.getAddress());
         response.setCreatedAt(patient.getCreatedAt());
         response.setUpdatedAt(patient.getUpdatedAt());
-        response.setUserId(patient.getUser().getId());
+        if (patient.getUser() != null) {
+            response.setUserId(patient.getUser().getId());
+        }
         response.setId(patient.getId());
+
         return response;
     }
 }

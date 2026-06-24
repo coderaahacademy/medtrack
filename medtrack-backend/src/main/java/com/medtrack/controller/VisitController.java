@@ -43,4 +43,9 @@ public class VisitController {
         NotesResponse response = visitService.getNoteByVisitID(visitId);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/{visitId}")
+    public ResponseEntity<VisitResponse> getById(@PathVariable Long visitId) {
+        return ResponseEntity.ok(visitService.getById(visitId));
+    }
 }

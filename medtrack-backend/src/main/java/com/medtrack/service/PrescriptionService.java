@@ -46,7 +46,13 @@ public class PrescriptionService {
         prescription.setStatus(request.getStatus());
         prescription.setIssueDate(request.getIssueDate());
         prescription.setNotes(request.getNotes());
-        request.getItems().forEach(itemRequest -> {
+        if (request.getItems() == null || request.getItems().isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Prescription must contain at least one item"
+            );
+        }
+        for (PrescriptionItemRequest itemRequest : request.getItems()) {
             Long medicationId = itemRequest.getMedicationId();
             Medication medication = medicationRepository.findById(medicationId)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Medication not found by id: " + medicationId));
@@ -58,7 +64,7 @@ public class PrescriptionService {
             item.setQuantity(itemRequest.getQuantity());
             item.setInstructions(itemRequest.getInstructions());
             prescription.addItem(item);
-        });
+        };
         return toResponse(prescriptionRepository.saveAndFlush(prescription));
     }
 
@@ -72,9 +78,17 @@ public class PrescriptionService {
         response.setStatus(prescription.getStatus());
         response.setIssueDate(prescription.getIssueDate());
         response.setNotes(prescription.getNotes());
-        response.setPatientId(prescription.getPatient().getId());
-        response.setDoctorId(prescription.getDoctor().getId());
-        response.setVisitId(prescription.getVisit().getId());
+        if (prescription.getPatient() != null) {
+            response.setPatientId(prescription.getPatient().getId());
+        }
+
+        if (prescription.getDoctor() != null) {
+            response.setDoctorId(prescription.getDoctor().getId());
+        }
+
+        if (prescription.getVisit() != null) {
+            response.setVisitId(prescription.getVisit().getId());
+        }
         List<PrescriptionItemResponse> itemResponses = prescription.getItems()
                 .stream().map(this::toItemResponse).collect(Collectors.toList());
         response.setItems(itemResponses);

@@ -61,8 +61,9 @@ public class InventoryService {
         response.setMinimumStock(inventory.getMinimumStock());
         response.setUpdatedAt(inventory.getUpdatedAt());
         response.setId(inventory.getId());
-        response.setPharmacyId(inventory.getPharmacy().getId());
-        response.setMedicationId(inventory.getMedication().getId());
+        response.setPharmacyId(
+                inventory.getPharmacy() != null ? inventory.getPharmacy().getId() : null
+        );
         return  response;
     }
 }
