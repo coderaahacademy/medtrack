@@ -30,9 +30,7 @@ public class DoctorService {
     @Transactional
     public DoctorResponse create(CreateDoctorRequest request) {
         Long userId = request.getUserId();
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with ID: " + userId));
-
+        User user = userRepository.findByIdOrThrow(userId);
         if (doctorRepository.existsByUserId(userId)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Doctor profile already exists for user ID: " + userId);
         }
@@ -57,8 +55,7 @@ public class DoctorService {
 
     @Transactional
     public DoctorResponse update(Long id, UpdateDoctorRequest request) {
-        Doctor doctor = doctorRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Doctor not found with ID: " + id));
+        Doctor doctor = doctorRepository.findByIdOrThrow(id);
         doctor.setFullName(request.getFullName());
         doctor.setSpecialization(request.getSpecialization());
         doctor.setLicenseNumber(request.getLicenseNumber());
@@ -69,8 +66,7 @@ public class DoctorService {
 
     @Transactional(readOnly = true)
     public DoctorResponse getById(Long id) {
-        Doctor doctor = doctorRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Doctor not found with ID: " + id));
+        Doctor doctor = doctorRepository.findByIdOrThrow(id);
         return toResponse(doctor);
     }
 
@@ -81,8 +77,7 @@ public class DoctorService {
 
     @Transactional
     public MessageResponse delete(Long id) {
-        Doctor doctor = doctorRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Doctor not found with ID: " + id));
+        Doctor doctor = doctorRepository.findByIdOrThrow(id);
         User user = doctor.getUser();
         user.getRoles().removeIf(r -> r.getRole() == Role.DOCTOR);
         patientRepository.unassignFamilyDoctor(id);

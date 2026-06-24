@@ -34,10 +34,8 @@ public class InventoryService {
         if (inventoryRepository.existsByPharmacyIdAndMedicationId(pharmacyId, medicationId)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,"Inventory record already exists for this pharmacy and medication.");
         }
-        Pharmacy pharmacy = pharmacyRepository.findById(pharmacyId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Pharmacy not found by id: " + pharmacyId));
-        Medication medication = medicationRepository.findById(medicationId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Medication not found by id: " + medicationId));
+        Pharmacy pharmacy = pharmacyRepository.findByIdOrThrow(pharmacyId);
+        Medication medication = medicationRepository.findByIdOrThrow(medicationId);
         PharmacyInventory inventory = new PharmacyInventory();
         inventory.setPharmacy(pharmacy);
         inventory.setMedication(medication);

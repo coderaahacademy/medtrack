@@ -32,9 +32,7 @@ public class PatientService {
     @Transactional
     public PatientResponse create(CreatePatientRequest request) {
         Long userId = request.getUserId();
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with ID: " + userId));
-
+        User user = userRepository.findByIdOrThrow(userId);
         if (patientRepository.existsByUserId(userId)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Patient profile already exists for user ID: " + userId);
         }
@@ -61,8 +59,7 @@ public class PatientService {
     }
     @Transactional
     public PatientResponse update(Long id, UpdatePatientRequest request) {
-        Patient patient = patientRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found with ID: " + id));
+        Patient patient = patientRepository.findByIdOrThrow(id);
         patient.setFullName(request.getFullName());
         patient.setBirthDate(request.getBirthDate());
         patient.setGender(request.getGender());
@@ -76,9 +73,7 @@ public class PatientService {
 
     @Transactional(readOnly = true)
     public PatientResponse getById(Long id) {
-        Patient patient = patientRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found with ID: " + id));
-        return toResponse(patient);
+        return toResponse(patientRepository.findByIdOrThrow(id));
     }
 
     @Transactional(readOnly = true)
@@ -89,18 +84,15 @@ public class PatientService {
     @Transactional
     public PatientResponse updateFamilyDoctor(Long id, FamilyDoctorRequest request){
         Long doctorId = request.getFamilyDoctorId();
-        Patient patient = patientRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Patient not found with ID: " + id));
-        Doctor doctor = doctorRepository.findById(doctorId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Doctor not found with ID: " + doctorId));
+        Patient patient = patientRepository.findByIdOrThrow(id);
+        Doctor doctor = doctorRepository.findByIdOrThrow(doctorId);
         patient.setFamilyDoctor(doctor);
         return toResponse(patientRepository.saveAndFlush(patient));
     }
 
     @Transactional
     public MessageResponse delete(Long id) {
-        Patient patient = patientRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found with ID: " + id));
+        Patient patient = patientRepository.findByIdOrThrow(id);
         User user = patient.getUser();
         user.getRoles().removeIf(r -> r.getRole() == Role.PATIENT);
         patientRepository.delete(patient);
