@@ -35,12 +35,7 @@ public class DoctorService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Doctor profile already exists for user ID: " + userId);
         }
         Doctor doctor = new Doctor();
-        doctor.setFullName(request.getFullName());
-        doctor.setSpecialization(request.getSpecialization());
-        doctor.setLicenseNumber(request.getLicenseNumber());
-        doctor.setPhone(request.getPhone());
-        doctor.setActive(request.isActive());
-        
+        mapRequestToEntity(request,doctor);
         boolean hasDoctorRole = user.getRoles().stream().anyMatch(r -> r.getRole() == Role.DOCTOR);
         if (!hasDoctorRole) {
             UserRole role = new UserRole();
@@ -56,11 +51,7 @@ public class DoctorService {
     @Transactional
     public DoctorResponse update(Long id, UpdateDoctorRequest request) {
         Doctor doctor = doctorRepository.findByIdOrThrow(id);
-        doctor.setFullName(request.getFullName());
-        doctor.setSpecialization(request.getSpecialization());
-        doctor.setLicenseNumber(request.getLicenseNumber());
-        doctor.setPhone(request.getPhone());
-        doctor.setActive(request.isActive());
+        mapRequestToEntity(request,doctor);
         return toResponse(doctorRepository.saveAndFlush(doctor));
     }
 
@@ -84,6 +75,14 @@ public class DoctorService {
         doctorRepository.delete(doctor);
         userRepository.saveAndFlush(user);
         return new MessageResponse("Doctor ID " + id + " was successfully deleted.");
+    }
+
+    private void mapRequestToEntity(DoctorRequest request, Doctor doctor) {
+        doctor.setFullName(request.getFullName());
+        doctor.setSpecialization(request.getSpecialization());
+        doctor.setLicenseNumber(request.getLicenseNumber());
+        doctor.setPhone(request.getPhone());
+        doctor.setActive(request.isActive());
     }
 
     private DoctorResponse toResponse(Doctor doctor) {

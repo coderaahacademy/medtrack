@@ -2,7 +2,7 @@ package com.medtrack.dto;
 
 import jakarta.validation.constraints.*;
 
-public class CreateDoctorRequest {
+public class CreateDoctorRequest implements DoctorRequest{
     @NotNull(message = "User ID is required")
     @Positive(message = "User ID must be a positive number")
     private Long userId;
