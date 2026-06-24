@@ -29,4 +29,10 @@ public class PrescriptionController {
         return ResponseEntity.ok(prescriptionService.getAllPrescriptions(pageable));
 
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<PrescriptionResponse> getById(@PathVariable Long id){
+        return ResponseEntity.ok(prescriptionService.getById(id));
+    }
+
 }

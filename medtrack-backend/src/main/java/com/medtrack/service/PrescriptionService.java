@@ -20,6 +20,7 @@ public class PrescriptionService {
     private final DoctorRepository doctorRepository;
     private final VisitRepository visitRepository;
     private final MedicationRepository medicationRepository;
+
     public PrescriptionService(PrescriptionRepository prescriptionRepository, PatientRepository patientRepository, DoctorRepository doctorRepository,
                                VisitRepository visitRepository, MedicationRepository medicationRepository) {
         this.prescriptionRepository = prescriptionRepository;
@@ -28,17 +29,18 @@ public class PrescriptionService {
         this.visitRepository = visitRepository;
         this.medicationRepository = medicationRepository;
     }
+
     @Transactional
     public PrescriptionResponse create(PrescriptionRequest request) {
         Long patientId = request.getPatientId();
         Long doctorId = request.getDoctorId();
         Long visitId = request.getVisitId();
         Patient patient = patientRepository.findById(patientId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Patient not found by id: " + patientId));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found by id: " + patientId));
         Doctor doctor = doctorRepository.findById(doctorId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Doctor not found by id: " + doctorId));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Doctor not found by id: " + doctorId));
         Visit visit = visitRepository.findById(visitId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Visit not found by id: " + visitId));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Visit not found by id: " + visitId));
         Prescription prescription = new Prescription();
         prescription.setPatient(patient);
         prescription.setDoctor(doctor);
@@ -49,7 +51,7 @@ public class PrescriptionService {
         request.getItems().forEach(itemRequest -> {
             Long medicationId = itemRequest.getMedicationId();
             Medication medication = medicationRepository.findById(medicationId)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Medication not found by id: " + medicationId));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Medication not found by id: " + medicationId));
             PrescriptionItem item = new PrescriptionItem();
             item.setMedication(medication);
             item.setDosage(itemRequest.getDosage());
@@ -100,8 +102,20 @@ public class PrescriptionService {
     }
 
     @Transactional(readOnly = true)
-    public Page<PrescriptionResponse> getAllPrescriptions (Pageable pageable) {
+    public Page<PrescriptionResponse> getAllPrescriptions(Pageable pageable) {
         Page<Prescription> prescriptions = prescriptionRepository.findAll(pageable);
         return prescriptions.map(this::toResponse);
     }
+
+    @Transactional(readOnly = true)
+    public PrescriptionResponse getById(Long id) {
+        Prescription prescription = prescriptionRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Prescription not found by id: " + id
+                ));
+        return toResponse(prescription);
+    }
+
+
 }
