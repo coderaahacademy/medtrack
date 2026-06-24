@@ -4,7 +4,7 @@ import jakarta.validation.constraints.*;
 
 import java.time.LocalDate;
 
-public class CreatePatientRequest {
+public class CreatePatientRequest implements PatientRequest{
 
     @NotNull(message = "User ID is required")
     @Positive(message = "User ID must be a positive number")

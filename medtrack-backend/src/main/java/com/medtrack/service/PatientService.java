@@ -37,15 +37,7 @@ public class PatientService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Patient profile already exists for user ID: " + userId);
         }
         Patient patient = new Patient();
-        patient.setFullName(request.getFullName());
-        patient.setBirthDate(request.getBirthDate());
-        patient.setGender(request.getGender());
-        patient.setBloodGroup(request.getBloodGroup());
-        patient.setAllergies(request.getAllergies());
-        patient.setChronicConditions(request.getChronicConditions());
-        patient.setPhone(request.getPhone());
-        patient.setAddress(request.getAddress());
-
+        mapRequestToEntity(request, patient);
         boolean hasPatientRole = user.getRoles().stream().anyMatch(r -> r.getRole() == Role.PATIENT);
         if (!hasPatientRole) {
             UserRole role = new UserRole();
@@ -60,14 +52,7 @@ public class PatientService {
     @Transactional
     public PatientResponse update(Long id, UpdatePatientRequest request) {
         Patient patient = patientRepository.findByIdOrThrow(id);
-        patient.setFullName(request.getFullName());
-        patient.setBirthDate(request.getBirthDate());
-        patient.setGender(request.getGender());
-        patient.setBloodGroup(request.getBloodGroup());
-        patient.setAllergies(request.getAllergies());
-        patient.setChronicConditions(request.getChronicConditions());
-        patient.setPhone(request.getPhone());
-        patient.setAddress(request.getAddress());
+        mapRequestToEntity(request, patient);
         return toResponse(patientRepository.saveAndFlush(patient));
     }
 
@@ -98,6 +83,17 @@ public class PatientService {
         patientRepository.delete(patient);
         userRepository.saveAndFlush(user);
         return new MessageResponse("Patient ID " + id + " was successfully deleted.");
+    }
+
+    private void mapRequestToEntity(PatientRequest request, Patient patient) {
+        patient.setFullName(request.getFullName());
+        patient.setBirthDate(request.getBirthDate());
+        patient.setGender(request.getGender());
+        patient.setBloodGroup(request.getBloodGroup());
+        patient.setAllergies(request.getAllergies());
+        patient.setChronicConditions(request.getChronicConditions());
+        patient.setPhone(request.getPhone());
+        patient.setAddress(request.getAddress());
     }
 
     private PatientResponse toResponse(Patient patient) {
