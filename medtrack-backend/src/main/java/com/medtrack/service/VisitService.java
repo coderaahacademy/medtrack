@@ -1,12 +1,12 @@
 package com.medtrack.service;
 
-import com.medtrack.dto.NotesRequest;
-import com.medtrack.dto.NotesResponse;
-import com.medtrack.dto.CreateVisitRequest;
-import com.medtrack.dto.VisitResponse;
+import com.medtrack.dto.*;
 import com.medtrack.entity.Doctor;
 import com.medtrack.entity.Patient;
 import com.medtrack.entity.Visit;
+import com.medtrack.exception.DoctorNotFoundException;
+import com.medtrack.exception.PatientNotFoundException;
+import com.medtrack.exception.VisitNotFoundException;
 import com.medtrack.repository.DoctorRepository;
 import com.medtrack.repository.PatientRepository;
 import com.medtrack.repository.VisitRepository;
