@@ -50,8 +50,7 @@ public class DoctorService {
 
     @Transactional(readOnly = true)
     public DoctorResponse getById(Long id) {
-        Doctor doctor = doctorRepository.findByIdOrThrow(id);
-        return toResponse(doctor);
+        return toResponse(doctorRepository.findByIdOrThrow(id));
     }
 
     @Transactional(readOnly = true)
