@@ -4,7 +4,6 @@ import com.medtrack.dto.*;
 import com.medtrack.entity.Doctor;
 import com.medtrack.entity.Patient;
 import com.medtrack.entity.User;
-import com.medtrack.entity.UserRole;
 import com.medtrack.enums.Role;
 import com.medtrack.repository.PatientRepository;
 import com.medtrack.repository.UserRepository;
@@ -38,14 +37,8 @@ public class PatientService {
         }
         Patient patient = new Patient();
         mapRequestToEntity(request, patient);
-        boolean hasPatientRole = user.getRoles().stream().anyMatch(r -> r.getRole() == Role.PATIENT);
-        if (!hasPatientRole) {
-            UserRole role = new UserRole();
-            role.setRole(Role.PATIENT);
-            role.setUser(user);
-            user.getRoles().add(role);
-            userRepository.saveAndFlush(user);
-        }
+        user.addRole(Role.PATIENT);
+        userRepository.saveAndFlush(user);
         patient.setUser(user);
         return toResponse(patientRepository.saveAndFlush(patient));
     }
@@ -79,7 +72,7 @@ public class PatientService {
     public MessageResponse delete(Long id) {
         Patient patient = patientRepository.findByIdOrThrow(id);
         User user = patient.getUser();
-        user.getRoles().removeIf(r -> r.getRole() == Role.PATIENT);
+        user.removeRole(Role.PATIENT);
         patientRepository.delete(patient);
         userRepository.saveAndFlush(user);
         return new MessageResponse("Patient ID " + id + " was successfully deleted.");

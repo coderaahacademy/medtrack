@@ -3,7 +3,6 @@ package com.medtrack.service;
 import com.medtrack.dto.*;
 import com.medtrack.entity.Doctor;
 import com.medtrack.entity.User;
-import com.medtrack.entity.UserRole;
 import com.medtrack.enums.Role;
 import com.medtrack.repository.DoctorRepository;
 import com.medtrack.repository.PatientRepository;
@@ -36,14 +35,8 @@ public class DoctorService {
         }
         Doctor doctor = new Doctor();
         mapRequestToEntity(request,doctor);
-        boolean hasDoctorRole = user.getRoles().stream().anyMatch(r -> r.getRole() == Role.DOCTOR);
-        if (!hasDoctorRole) {
-            UserRole role = new UserRole();
-            role.setRole(Role.DOCTOR);
-            role.setUser(user);
-            user.getRoles().add(role);
-            userRepository.saveAndFlush(user);
-        }
+        user.addRole(Role.DOCTOR);
+        userRepository.saveAndFlush(user);
         doctor.setUser(user);
         return toResponse(doctorRepository.saveAndFlush(doctor));
     }
@@ -70,7 +63,7 @@ public class DoctorService {
     public MessageResponse delete(Long id) {
         Doctor doctor = doctorRepository.findByIdOrThrow(id);
         User user = doctor.getUser();
-        user.getRoles().removeIf(r -> r.getRole() == Role.DOCTOR);
+        user.removeRole(Role.DOCTOR);
         patientRepository.unassignFamilyDoctor(id);
         doctorRepository.delete(doctor);
         userRepository.saveAndFlush(user);
