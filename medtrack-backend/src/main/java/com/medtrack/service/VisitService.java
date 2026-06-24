@@ -1,21 +1,19 @@
 package com.medtrack.service;
 
+import com.medtrack.dto.CreateVisitRequest;
+import com.medtrack.dto.NotesRequest;
+import com.medtrack.dto.NotesResponse;
+import com.medtrack.dto.VisitResponse;
 import com.medtrack.entity.Doctor;
 import com.medtrack.entity.Patient;
 import com.medtrack.entity.Visit;
-import com.medtrack.dto.CreateVisitRequest;
-import com.medtrack.dto.VisitResponse;
 import com.medtrack.repository.DoctorRepository;
 import com.medtrack.repository.PatientRepository;
 import com.medtrack.repository.VisitRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.medtrack.dto.NotesRequest;
-import com.medtrack.dto.NotesResponse;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class VisitService {
