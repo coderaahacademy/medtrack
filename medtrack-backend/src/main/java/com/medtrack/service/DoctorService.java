@@ -80,7 +80,7 @@ public class DoctorService {
     }
 
     @Transactional
-    public String delete(Long id) {
+    public MessageResponse delete(Long id) {
         Doctor doctor = doctorRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Doctor not found with ID: " + id));
         User user = doctor.getUser();
@@ -88,7 +88,7 @@ public class DoctorService {
         patientRepository.unassignFamilyDoctor(id);
         doctorRepository.delete(doctor);
         userRepository.saveAndFlush(user);
-        return "Doctor ID " + id + " was successfully deleted.";
+        return new MessageResponse("Doctor ID " + id + " was successfully deleted.");
     }
 
     private DoctorResponse toResponse(Doctor doctor) {

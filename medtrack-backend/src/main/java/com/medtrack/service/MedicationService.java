@@ -2,6 +2,7 @@ package com.medtrack.service;
 
 import com.medtrack.dto.MedicationRequest;
 import com.medtrack.dto.MedicationResponse;
+import com.medtrack.dto.MessageResponse;
 import com.medtrack.entity.Medication;
 import com.medtrack.repository.MedicationRepository;
 import com.medtrack.specification.MedicationSpecification;
@@ -58,11 +59,11 @@ public class MedicationService {
     }
 
     @Transactional
-    public String deactivate(Long id) {
+    public MessageResponse deactivate(Long id) {
         Medication medication = getOrThrow(id);
         medication.setActive(false);
         medicationRepository.saveAndFlush(medication);
-        return "Medication ID " + id + " was successfully deactivated.";
+        return new MessageResponse("Medication ID " + id + " was successfully deactivated.");
     }
 
     @Transactional(readOnly = true)

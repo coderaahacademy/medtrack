@@ -1,9 +1,6 @@
 package com.medtrack.service;
 
-import com.medtrack.dto.FamilyDoctorRequest;
-import com.medtrack.dto.CreatePatientRequest;
-import com.medtrack.dto.PatientResponse;
-import com.medtrack.dto.UpdatePatientRequest;
+import com.medtrack.dto.*;
 import com.medtrack.entity.Doctor;
 import com.medtrack.entity.Patient;
 import com.medtrack.entity.User;
@@ -101,14 +98,14 @@ public class PatientService {
     }
 
     @Transactional
-    public String delete(Long id) {
+    public MessageResponse delete(Long id) {
         Patient patient = patientRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found with ID: " + id));
         User user = patient.getUser();
         user.getRoles().removeIf(r -> r.getRole() == Role.PATIENT);
         patientRepository.delete(patient);
         userRepository.saveAndFlush(user);
-        return "Patient ID " + id + " was successfully deleted.";
+        return new MessageResponse("Patient ID " + id + " was successfully deleted.");
     }
 
     private PatientResponse toResponse(Patient patient) {
