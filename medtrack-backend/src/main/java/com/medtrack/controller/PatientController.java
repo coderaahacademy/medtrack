@@ -53,7 +53,7 @@ public class PatientController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> delete(@PathVariable Long id) {
+    public ResponseEntity<MessageResponse> delete(@PathVariable Long id) {
         return ResponseEntity.ok(patientService.delete(id));
     }
 }
