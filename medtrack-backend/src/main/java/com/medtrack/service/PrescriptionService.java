@@ -109,12 +109,8 @@ public class PrescriptionService {
 
     @Transactional(readOnly = true)
     public PrescriptionResponse getById(Long id) {
-        Prescription prescription = prescriptionRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Prescription not found by id: " + id
-                ));
-        return toResponse(prescription);
+        return toResponse(prescriptionRepository.findById(id).
+                orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,  "Prescription not found by id: " + id)));
     }
 
 
