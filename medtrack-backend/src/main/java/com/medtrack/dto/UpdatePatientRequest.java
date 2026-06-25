@@ -3,7 +3,7 @@ package com.medtrack.dto;
 import jakarta.validation.constraints.*;
 import java.time.LocalDate;
 
-public class UpdatePatientRequest {
+public class UpdatePatientRequest implements  PatientRequest{
 
     @NotBlank(message = "Full name cannot be empty")
     @Size(min = 2, max = 100, message = "Full name must be between 2 and 100 characters")

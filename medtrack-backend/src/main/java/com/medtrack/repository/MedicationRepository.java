@@ -3,13 +3,12 @@ package com.medtrack.repository;
 import com.medtrack.entity.Medication;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface MedicationRepository extends JpaRepository<Medication, Long>, JpaSpecificationExecutor<Medication> {
+public interface MedicationRepository extends BaseRepository<Medication, Long>, JpaSpecificationExecutor<Medication> {
     Optional<Medication> findFirstByNameIgnoreCaseAndGenericNameIgnoreCaseAndBrandIgnoreCaseAndDosageFormIgnoreCaseAndStrengthIgnoreCase(
             String name, String genericName, String brand, String dosageForm, String strength
     );

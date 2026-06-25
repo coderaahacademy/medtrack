@@ -2,6 +2,7 @@ package com.medtrack.controller;
 
 import com.medtrack.dto.CreateDoctorRequest;
 import com.medtrack.dto.DoctorResponse;
+import com.medtrack.dto.MessageResponse;
 import com.medtrack.dto.UpdateDoctorRequest;
 import com.medtrack.service.DoctorService;
 import jakarta.validation.Valid;
@@ -41,7 +42,7 @@ public class DoctorController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> delete(@PathVariable Long id) {
+    public ResponseEntity<MessageResponse> delete(@PathVariable Long id) {
         return ResponseEntity.ok(doctorService.delete(id));
     }
 }

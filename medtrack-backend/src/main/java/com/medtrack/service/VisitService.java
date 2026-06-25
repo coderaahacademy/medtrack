@@ -1,21 +1,19 @@
 package com.medtrack.service;
 
+import com.medtrack.dto.CreateVisitRequest;
+import com.medtrack.dto.NotesRequest;
+import com.medtrack.dto.NotesResponse;
+import com.medtrack.dto.VisitResponse;
 import com.medtrack.entity.Doctor;
 import com.medtrack.entity.Patient;
 import com.medtrack.entity.Visit;
-import com.medtrack.dto.CreateVisitRequest;
-import com.medtrack.dto.VisitResponse;
 import com.medtrack.repository.DoctorRepository;
 import com.medtrack.repository.PatientRepository;
 import com.medtrack.repository.VisitRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.medtrack.dto.NotesRequest;
-import com.medtrack.dto.NotesResponse;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class VisitService {
@@ -33,10 +31,8 @@ public class VisitService {
     public VisitResponse create(CreateVisitRequest request){
         Long patientId = request.getPatientId();
         Long doctorId = request.getDoctorId();
-        Patient patient = patientRepository.findById(patientId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Patient not found with ID: " + patientId));
-        Doctor doctor = doctorRepository.findById(doctorId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Doctor not found with ID: " + doctorId));
+        Patient patient = patientRepository.findByIdOrThrow(patientId);
+        Doctor doctor = doctorRepository.findByIdOrThrow(doctorId);
         Visit visit = new Visit();
         visit.setPatient(patient);
         visit.setDoctor(doctor);
@@ -70,11 +66,9 @@ public class VisitService {
 
     @Transactional
     public NotesResponse addNoteToVisit(Long visitId, NotesRequest request) {
-        Visit visit = visitRepository.findById(visitId)
-                .orElseThrow(() -> new IllegalArgumentException("Visit not found with ID: " + visitId));
+        Visit visit = visitRepository.findByIdOrThrow(visitId);
         visit.setNotes(request.getNotes());
         visitRepository.save(visit);
-
         NotesResponse response = new NotesResponse();
         response.setVisitId(visit.getId());
         response.setNotes(visit.getNotes());
@@ -85,9 +79,7 @@ public class VisitService {
 
     @Transactional(readOnly = true)
     public NotesResponse getNoteByVisitID(Long visitId) {
-        Visit visit = visitRepository.findById(visitId)
-                .orElseThrow(() -> new IllegalArgumentException("Visit not found with ID:" + visitId));
-
+        Visit visit = visitRepository.findByIdOrThrow(visitId);
         NotesResponse response = new NotesResponse();
         response.setVisitId(visit.getId());
         response.setNotes(visit.getNotes() != null ? visit.getNotes() : "");

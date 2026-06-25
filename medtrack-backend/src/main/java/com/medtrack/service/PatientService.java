@@ -1,17 +1,13 @@
 package com.medtrack.service;
 
-import com.medtrack.dto.FamilyDoctorRequest;
-import com.medtrack.dto.CreatePatientRequest;
-import com.medtrack.dto.PatientResponse;
-import com.medtrack.dto.UpdatePatientRequest;
+import com.medtrack.dto.*;
 import com.medtrack.entity.Doctor;
 import com.medtrack.entity.Patient;
 import com.medtrack.entity.User;
-import com.medtrack.entity.UserRole;
 import com.medtrack.enums.Role;
+import com.medtrack.repository.DoctorRepository;
 import com.medtrack.repository.PatientRepository;
 import com.medtrack.repository.UserRepository;
-import com.medtrack.repository.DoctorRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -35,53 +31,27 @@ public class PatientService {
     @Transactional
     public PatientResponse create(CreatePatientRequest request) {
         Long userId = request.getUserId();
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with ID: " + userId));
-
+        User user = userRepository.findByIdOrThrow(userId);
         if (patientRepository.existsByUserId(userId)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Patient profile already exists for user ID: " + userId);
         }
         Patient patient = new Patient();
-        patient.setFullName(request.getFullName());
-        patient.setBirthDate(request.getBirthDate());
-        patient.setGender(request.getGender());
-        patient.setBloodGroup(request.getBloodGroup());
-        patient.setAllergies(request.getAllergies());
-        patient.setChronicConditions(request.getChronicConditions());
-        patient.setPhone(request.getPhone());
-        patient.setAddress(request.getAddress());
-
-        boolean hasPatientRole = user.getRoles().stream().anyMatch(r -> r.getRole() == Role.PATIENT);
-        if (!hasPatientRole) {
-            UserRole role = new UserRole();
-            role.setRole(Role.PATIENT);
-            role.setUser(user);
-            user.getRoles().add(role);
-            userRepository.saveAndFlush(user);
-        }
+        mapRequestToEntity(request, patient);
+        user.addRole(Role.PATIENT);
+        userRepository.saveAndFlush(user);
         patient.setUser(user);
         return toResponse(patientRepository.saveAndFlush(patient));
     }
     @Transactional
     public PatientResponse update(Long id, UpdatePatientRequest request) {
-        Patient patient = patientRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found with ID: " + id));
-        patient.setFullName(request.getFullName());
-        patient.setBirthDate(request.getBirthDate());
-        patient.setGender(request.getGender());
-        patient.setBloodGroup(request.getBloodGroup());
-        patient.setAllergies(request.getAllergies());
-        patient.setChronicConditions(request.getChronicConditions());
-        patient.setPhone(request.getPhone());
-        patient.setAddress(request.getAddress());
+        Patient patient = patientRepository.findByIdOrThrow(id);
+        mapRequestToEntity(request, patient);
         return toResponse(patientRepository.saveAndFlush(patient));
     }
 
     @Transactional(readOnly = true)
     public PatientResponse getById(Long id) {
-        Patient patient = patientRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found with ID: " + id));
-        return toResponse(patient);
+        return toResponse(patientRepository.findByIdOrThrow(id));
     }
 
     @Transactional(readOnly = true)
@@ -92,23 +62,31 @@ public class PatientService {
     @Transactional
     public PatientResponse updateFamilyDoctor(Long id, FamilyDoctorRequest request){
         Long doctorId = request.getFamilyDoctorId();
-        Patient patient = patientRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Patient not found with ID: " + id));
-        Doctor doctor = doctorRepository.findById(doctorId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Doctor not found with ID: " + doctorId));
+        Patient patient = patientRepository.findByIdOrThrow(id);
+        Doctor doctor = doctorRepository.findByIdOrThrow(doctorId);
         patient.setFamilyDoctor(doctor);
         return toResponse(patientRepository.saveAndFlush(patient));
     }
 
     @Transactional
-    public String delete(Long id) {
-        Patient patient = patientRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found with ID: " + id));
+    public MessageResponse delete(Long id) {
+        Patient patient = patientRepository.findByIdOrThrow(id);
         User user = patient.getUser();
-        user.getRoles().removeIf(r -> r.getRole() == Role.PATIENT);
+        user.removeRole(Role.PATIENT);
         patientRepository.delete(patient);
         userRepository.saveAndFlush(user);
-        return "Patient ID " + id + " was successfully deleted.";
+        return new MessageResponse("Patient ID " + id + " was successfully deleted.");
+    }
+
+    private void mapRequestToEntity(PatientRequest request, Patient patient) {
+        patient.setFullName(request.getFullName());
+        patient.setBirthDate(request.getBirthDate());
+        patient.setGender(request.getGender());
+        patient.setBloodGroup(request.getBloodGroup());
+        patient.setAllergies(request.getAllergies());
+        patient.setChronicConditions(request.getChronicConditions());
+        patient.setPhone(request.getPhone());
+        patient.setAddress(request.getAddress());
     }
 
     private PatientResponse toResponse(Patient patient) {

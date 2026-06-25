@@ -1,14 +1,14 @@
 package com.medtrack.service;
 
-import com.medtrack.dto.*;
+import com.medtrack.dto.PrescriptionItemResponse;
+import com.medtrack.dto.PrescriptionRequest;
+import com.medtrack.dto.PrescriptionResponse;
 import com.medtrack.entity.*;
 import com.medtrack.repository.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -35,12 +35,11 @@ public class PrescriptionService {
         Long patientId = request.getPatientId();
         Long doctorId = request.getDoctorId();
         Long visitId = request.getVisitId();
-        Patient patient = patientRepository.findById(patientId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Patient not found by id: " + patientId));
-        Doctor doctor = doctorRepository.findById(doctorId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Doctor not found by id: " + doctorId));
-        Visit visit = visitRepository.findById(visitId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Visit not found by id: " + visitId));
+
+        Patient patient = patientRepository.findByIdOrThrow(patientId);
+        Doctor doctor = doctorRepository.findByIdOrThrow(doctorId);
+        Visit visit = visitRepository.findByIdOrThrow(visitId);
+
         Prescription prescription = new Prescription();
         prescription.setPatient(patient);
         prescription.setDoctor(doctor);
@@ -50,8 +49,9 @@ public class PrescriptionService {
         prescription.setNotes(request.getNotes());
         request.getItems().forEach(itemRequest -> {
             Long medicationId = itemRequest.getMedicationId();
-            Medication medication = medicationRepository.findById(medicationId)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Medication not found by id: " + medicationId));
+
+            Medication medication = medicationRepository.findByIdOrThrow(medicationId);
+
             PrescriptionItem item = new PrescriptionItem();
             item.setMedication(medication);
             item.setDosage(itemRequest.getDosage());
@@ -109,8 +109,7 @@ public class PrescriptionService {
 
     @Transactional(readOnly = true)
     public PrescriptionResponse getById(Long id) {
-        return toResponse(prescriptionRepository.findById(id).
-                orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,  "Prescription not found by id: " + id)));
+        return toResponse(prescriptionRepository.findByIdOrThrow(id));
     }
 
 

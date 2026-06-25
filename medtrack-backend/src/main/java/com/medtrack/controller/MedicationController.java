@@ -2,6 +2,7 @@ package com.medtrack.controller;
 
 import com.medtrack.dto.MedicationRequest;
 import com.medtrack.dto.MedicationResponse;
+import com.medtrack.dto.MessageResponse;
 import com.medtrack.service.MedicationService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -52,7 +53,7 @@ public class MedicationController {
     }
 
     @PatchMapping("/{id}/deactivate")
-    public ResponseEntity<String> deactivate(@PathVariable Long id) {
+    public ResponseEntity<MessageResponse> deactivate(@PathVariable Long id) {
         return ResponseEntity.ok(medicationService.deactivate(id));
     }
 }
