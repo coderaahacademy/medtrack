@@ -2,6 +2,7 @@ package com.medtrack.service;
 
 import com.medtrack.dto.MedicationRequest;
 import com.medtrack.dto.MedicationResponse;
+import com.medtrack.dto.MessageResponse;
 import com.medtrack.entity.Medication;
 import com.medtrack.repository.MedicationRepository;
 import com.medtrack.specification.MedicationSpecification;
@@ -12,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+
 import java.util.Optional;
 
 @Service
@@ -40,12 +42,12 @@ public class MedicationService {
     }
 
     public MedicationResponse getById(Long id) {
-        return toResponse(getOrThrow(id));
+        return toResponse(medicationRepository.findByIdOrThrow(id));
     }
 
     @Transactional
     public MedicationResponse update(Long id, MedicationRequest request) {
-        Medication medication = getOrThrow(id);
+        Medication medication = medicationRepository.findByIdOrThrow(id);
 
         Optional<Medication> duplicate = getExisting(request);
         if (duplicate.isPresent() && !duplicate.get().getId().equals(id)) {
@@ -58,11 +60,11 @@ public class MedicationService {
     }
 
     @Transactional
-    public String deactivate(Long id) {
-        Medication medication = getOrThrow(id);
+    public MessageResponse deactivate(Long id) {
+        Medication medication = medicationRepository.findByIdOrThrow(id);
         medication.setActive(false);
         medicationRepository.saveAndFlush(medication);
-        return "Medication ID " + id + " was successfully deactivated.";
+        return new MessageResponse("Medication ID " + id + " was successfully deactivated.");
     }
 
     @Transactional(readOnly = true)
@@ -74,11 +76,6 @@ public class MedicationService {
     private Optional<Medication> getExisting(MedicationRequest request) {
         return medicationRepository.findFirstByNameIgnoreCaseAndGenericNameIgnoreCaseAndBrandIgnoreCaseAndDosageFormIgnoreCaseAndStrengthIgnoreCase(
                 request.getName(), request.getGenericName(), request.getBrand(), request.getDosageForm(), request.getStrength());
-    }
-
-    private Medication getOrThrow(Long id) {
-        return medicationRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Medication not found with id: " + id));
     }
 
     private void mapRequestToEntity(MedicationRequest request, Medication medication) {

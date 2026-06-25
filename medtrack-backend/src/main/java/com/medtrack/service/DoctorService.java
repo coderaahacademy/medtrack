@@ -3,7 +3,6 @@ package com.medtrack.service;
 import com.medtrack.dto.*;
 import com.medtrack.entity.Doctor;
 import com.medtrack.entity.User;
-import com.medtrack.entity.UserRole;
 import com.medtrack.enums.Role;
 import com.medtrack.repository.DoctorRepository;
 import com.medtrack.repository.PatientRepository;
@@ -30,48 +29,28 @@ public class DoctorService {
     @Transactional
     public DoctorResponse create(CreateDoctorRequest request) {
         Long userId = request.getUserId();
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with ID: " + userId));
-
+        User user = userRepository.findByIdOrThrow(userId);
         if (doctorRepository.existsByUserId(userId)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Doctor profile already exists for user ID: " + userId);
         }
         Doctor doctor = new Doctor();
-        doctor.setFullName(request.getFullName());
-        doctor.setSpecialization(request.getSpecialization());
-        doctor.setLicenseNumber(request.getLicenseNumber());
-        doctor.setPhone(request.getPhone());
-        doctor.setActive(request.isActive());
-        
-        boolean hasDoctorRole = user.getRoles().stream().anyMatch(r -> r.getRole() == Role.DOCTOR);
-        if (!hasDoctorRole) {
-            UserRole role = new UserRole();
-            role.setRole(Role.DOCTOR);
-            role.setUser(user);
-            user.getRoles().add(role);
-            userRepository.saveAndFlush(user);
-        }
+        mapRequestToEntity(request,doctor);
+        user.addRole(Role.DOCTOR);
+        userRepository.saveAndFlush(user);
         doctor.setUser(user);
         return toResponse(doctorRepository.saveAndFlush(doctor));
     }
 
     @Transactional
     public DoctorResponse update(Long id, UpdateDoctorRequest request) {
-        Doctor doctor = doctorRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Doctor not found with ID: " + id));
-        doctor.setFullName(request.getFullName());
-        doctor.setSpecialization(request.getSpecialization());
-        doctor.setLicenseNumber(request.getLicenseNumber());
-        doctor.setPhone(request.getPhone());
-        doctor.setActive(request.isActive());
+        Doctor doctor = doctorRepository.findByIdOrThrow(id);
+        mapRequestToEntity(request,doctor);
         return toResponse(doctorRepository.saveAndFlush(doctor));
     }
 
     @Transactional(readOnly = true)
     public DoctorResponse getById(Long id) {
-        Doctor doctor = doctorRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Doctor not found with ID: " + id));
-        return toResponse(doctor);
+        return toResponse(doctorRepository.findByIdOrThrow(id));
     }
 
     @Transactional(readOnly = true)
@@ -80,15 +59,22 @@ public class DoctorService {
     }
 
     @Transactional
-    public String delete(Long id) {
-        Doctor doctor = doctorRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Doctor not found with ID: " + id));
+    public MessageResponse delete(Long id) {
+        Doctor doctor = doctorRepository.findByIdOrThrow(id);
         User user = doctor.getUser();
-        user.getRoles().removeIf(r -> r.getRole() == Role.DOCTOR);
+        user.removeRole(Role.DOCTOR);
         patientRepository.unassignFamilyDoctor(id);
         doctorRepository.delete(doctor);
         userRepository.saveAndFlush(user);
-        return "Doctor ID " + id + " was successfully deleted.";
+        return new MessageResponse("Doctor ID " + id + " was successfully deleted.");
+    }
+
+    private void mapRequestToEntity(DoctorRequest request, Doctor doctor) {
+        doctor.setFullName(request.getFullName());
+        doctor.setSpecialization(request.getSpecialization());
+        doctor.setLicenseNumber(request.getLicenseNumber());
+        doctor.setPhone(request.getPhone());
+        doctor.setActive(request.isActive());
     }
 
     private DoctorResponse toResponse(Doctor doctor) {

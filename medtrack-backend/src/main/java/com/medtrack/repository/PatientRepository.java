@@ -1,7 +1,6 @@
 package com.medtrack.repository;
 
 import com.medtrack.entity.Patient;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -10,7 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface PatientRepository extends JpaRepository<Patient, Long> {
+public interface PatientRepository extends BaseRepository<Patient, Long> {
     Optional<Patient> findByUserId(Long userId);
     boolean existsByUserId(Long userId);
     @Modifying
