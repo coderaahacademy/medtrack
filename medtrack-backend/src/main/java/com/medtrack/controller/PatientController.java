@@ -5,6 +5,7 @@ import com.medtrack.dto.PatientRequest;
 import com.medtrack.dto.PatientResponse;
 import com.medtrack.dto.PrescriptionResponse;
 import com.medtrack.service.PatientService;
+import com.medtrack.dto.TimelineItemDTO;
 import com.medtrack.service.PrescriptionService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -60,5 +61,12 @@ public class PatientController {
     public ResponseEntity<Void> deletePatient(@PathVariable Long id) {
         patientService.deletePatient(id);
         return ResponseEntity.noContent().build();
+
+    }
+    // 🎫 متد اختصاصی تسک T32 (به داخل بدنه اصلی کلاس منتقل شد)
+    @GetMapping("/{patientId}/timeline")
+    public ResponseEntity<List<TimelineItemDTO>> getPatientTimeline(@PathVariable Long patientId) {
+        List<TimelineItemDTO> timeline = patientService.getPatientTimeline(patientId);
+        return ResponseEntity.ok(timeline);
     }
 }
