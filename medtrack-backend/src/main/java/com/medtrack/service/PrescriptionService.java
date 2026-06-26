@@ -20,6 +20,7 @@ public class PrescriptionService {
     private final DoctorRepository doctorRepository;
     private final VisitRepository visitRepository;
     private final MedicationRepository medicationRepository;
+
     public PrescriptionService(PrescriptionRepository prescriptionRepository, PatientRepository patientRepository, DoctorRepository doctorRepository,
                                VisitRepository visitRepository, MedicationRepository medicationRepository) {
         this.prescriptionRepository = prescriptionRepository;
@@ -28,14 +29,17 @@ public class PrescriptionService {
         this.visitRepository = visitRepository;
         this.medicationRepository = medicationRepository;
     }
+
     @Transactional
     public PrescriptionResponse create(PrescriptionRequest request) {
         Long patientId = request.getPatientId();
         Long doctorId = request.getDoctorId();
         Long visitId = request.getVisitId();
+
         Patient patient = patientRepository.findByIdOrThrow(patientId);
         Doctor doctor = doctorRepository.findByIdOrThrow(doctorId);
         Visit visit = visitRepository.findByIdOrThrow(visitId);
+
         Prescription prescription = new Prescription();
         prescription.setPatient(patient);
         prescription.setDoctor(doctor);
@@ -45,7 +49,9 @@ public class PrescriptionService {
         prescription.setNotes(request.getNotes());
         request.getItems().forEach(itemRequest -> {
             Long medicationId = itemRequest.getMedicationId();
+
             Medication medication = medicationRepository.findByIdOrThrow(medicationId);
+
             PrescriptionItem item = new PrescriptionItem();
             item.setMedication(medication);
             item.setDosage(itemRequest.getDosage());
@@ -96,8 +102,15 @@ public class PrescriptionService {
     }
 
     @Transactional(readOnly = true)
-    public Page<PrescriptionResponse> getAllPrescriptions (Pageable pageable) {
+    public Page<PrescriptionResponse> getAllPrescriptions(Pageable pageable) {
         Page<Prescription> prescriptions = prescriptionRepository.findAll(pageable);
         return prescriptions.map(this::toResponse);
     }
+
+    @Transactional(readOnly = true)
+    public PrescriptionResponse getById(Long id) {
+        return toResponse(prescriptionRepository.findByIdOrThrow(id));
+    }
+
+
 }
