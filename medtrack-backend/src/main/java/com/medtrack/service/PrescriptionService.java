@@ -1,6 +1,8 @@
 package com.medtrack.service;
 
-import com.medtrack.dto.*;
+import com.medtrack.dto.PrescriptionItemResponse;
+import com.medtrack.dto.PrescriptionRequest;
+import com.medtrack.dto.PrescriptionResponse;
 import com.medtrack.entity.*;
 import com.medtrack.repository.*;
 import org.springframework.data.domain.Page;
@@ -18,6 +20,7 @@ public class PrescriptionService {
     private final DoctorRepository doctorRepository;
     private final VisitRepository visitRepository;
     private final MedicationRepository medicationRepository;
+
     public PrescriptionService(PrescriptionRepository prescriptionRepository, PatientRepository patientRepository, DoctorRepository doctorRepository,
                                VisitRepository visitRepository, MedicationRepository medicationRepository) {
         this.prescriptionRepository = prescriptionRepository;
@@ -26,17 +29,17 @@ public class PrescriptionService {
         this.visitRepository = visitRepository;
         this.medicationRepository = medicationRepository;
     }
+
     @Transactional
-    public PrescriptionResponse createPrescription(PrescriptionRequest request) {
+    public PrescriptionResponse create(PrescriptionRequest request) {
         Long patientId = request.getPatientId();
         Long doctorId = request.getDoctorId();
         Long visitId = request.getVisitId();
-        Patient patient = patientRepository.findById(patientId)
-                .orElseThrow(() -> new IllegalArgumentException("Patient not found by id: " + patientId));
-        Doctor doctor = doctorRepository.findById(doctorId)
-                .orElseThrow(() -> new IllegalArgumentException("Doctor not found by id: " + doctorId));
-        Visit visit = visitRepository.findById(visitId)
-                .orElseThrow(() -> new IllegalArgumentException("Visit not found by id: " + visitId));
+
+        Patient patient = patientRepository.findByIdOrThrow(patientId);
+        Doctor doctor = doctorRepository.findByIdOrThrow(doctorId);
+        Visit visit = visitRepository.findByIdOrThrow(visitId);
+
         Prescription prescription = new Prescription();
         prescription.setPatient(patient);
         prescription.setDoctor(doctor);
@@ -46,8 +49,9 @@ public class PrescriptionService {
         prescription.setNotes(request.getNotes());
         request.getItems().forEach(itemRequest -> {
             Long medicationId = itemRequest.getMedicationId();
-            Medication medication = medicationRepository.findById(medicationId)
-                    .orElseThrow(() -> new IllegalArgumentException("Medication not found by id: " + medicationId));
+
+            Medication medication = medicationRepository.findByIdOrThrow(medicationId);
+
             PrescriptionItem item = new PrescriptionItem();
             item.setMedication(medication);
             item.setDosage(itemRequest.getDosage());
@@ -57,14 +61,12 @@ public class PrescriptionService {
             item.setInstructions(itemRequest.getInstructions());
             prescription.addItem(item);
         });
-        Prescription savedPrescription = prescriptionRepository.saveAndFlush(prescription);
-        return toResponse(savedPrescription);
+        return toResponse(prescriptionRepository.saveAndFlush(prescription));
     }
 
     @Transactional(readOnly = true)
-    public Page<PrescriptionResponse> getPatientPrescriptions(Long patientId, Pageable pageable) {
-        Page<Prescription> prescriptions = prescriptionRepository.findByPatientId(patientId, pageable);
-        return prescriptions.map(this::toResponse);
+    public Page<PrescriptionResponse> getPrescriptions(Long patientId, Pageable pageable) {
+        return prescriptionRepository.findByPatientId(patientId, pageable).map(this::toResponse);
     }
 
     private PrescriptionResponse toResponse(Prescription prescription) {
@@ -98,4 +100,17 @@ public class PrescriptionService {
         response.setUpdatedAt(prescriptionItem.getUpdatedAt());
         return response;
     }
+
+    @Transactional(readOnly = true)
+    public Page<PrescriptionResponse> getAllPrescriptions(Pageable pageable) {
+        Page<Prescription> prescriptions = prescriptionRepository.findAll(pageable);
+        return prescriptions.map(this::toResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public PrescriptionResponse getById(Long id) {
+        return toResponse(prescriptionRepository.findByIdOrThrow(id));
+    }
+
+
 }

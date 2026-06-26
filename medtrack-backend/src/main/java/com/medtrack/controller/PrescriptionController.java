@@ -24,4 +24,10 @@ public class PrescriptionController {
         PrescriptionResponse body = prescriptionService.createPrescription(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(body);
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<PrescriptionResponse> getById(@PathVariable Long id){
+        return ResponseEntity.ok(prescriptionService.getById(id));
+    }
+
 }
