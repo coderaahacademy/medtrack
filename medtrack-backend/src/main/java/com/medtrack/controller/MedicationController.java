@@ -1,15 +1,10 @@
 package com.medtrack.controller;
 
-import com.medtrack.dto.MedicationRequest;
-import com.medtrack.dto.MedicationResponse;
-import com.medtrack.dto.MessageResponse;
+import com.medtrack.entity.Medication;
 import com.medtrack.service.MedicationService;
-import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/medications")
@@ -21,39 +16,12 @@ public class MedicationController {
     }
 
     @PostMapping
-    public ResponseEntity<MedicationResponse> create(@Valid @RequestBody MedicationRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(medicationService.create(request));
+    public ResponseEntity<Medication> create(@RequestBody Medication medication) {
+        return ResponseEntity.ok(medicationService.createMedication(medication));
     }
 
     @GetMapping
-    public ResponseEntity<Page<MedicationResponse>> getAll(Pageable pageable) {
-        return ResponseEntity.ok(medicationService.getAll(pageable));
-    }
-
-    @GetMapping("/search")
-    public ResponseEntity<Page<MedicationResponse>> search(
-            @RequestParam(name = "q", required = false) String q,
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) String genericName,
-            @RequestParam(required = false) String brand,
-            Pageable pageable) {
-        return ResponseEntity.ok(medicationService.search(q, name, genericName, brand, pageable));
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<MedicationResponse> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(medicationService.getById(id));
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<MedicationResponse> update(
-            @PathVariable Long id,
-            @Valid @RequestBody MedicationRequest request) {
-        return ResponseEntity.ok(medicationService.update(id, request));
-    }
-
-    @PatchMapping("/{id}/deactivate")
-    public ResponseEntity<MessageResponse> deactivate(@PathVariable Long id) {
-        return ResponseEntity.ok(medicationService.deactivate(id));
+    public ResponseEntity<List<Medication>> getAll() {
+        return ResponseEntity.ok(medicationService.getAllMedications());
     }
 }

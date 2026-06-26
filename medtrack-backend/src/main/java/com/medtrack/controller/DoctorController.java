@@ -2,7 +2,6 @@ package com.medtrack.controller;
 
 import com.medtrack.dto.CreateDoctorRequest;
 import com.medtrack.dto.DoctorResponse;
-import com.medtrack.dto.MessageResponse;
 import com.medtrack.dto.UpdateDoctorRequest;
 import com.medtrack.service.DoctorService;
 import jakarta.validation.Valid;
@@ -23,26 +22,26 @@ public class DoctorController {
 
     @PostMapping
     public ResponseEntity<DoctorResponse> create(@Valid @RequestBody CreateDoctorRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(doctorService.create(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(doctorService.createDoctor(request));
     }
 
     @GetMapping
     public ResponseEntity<Page<DoctorResponse>> getAll(Pageable pageable) {
-        return ResponseEntity.ok(doctorService.getAll(pageable));
+        return ResponseEntity.ok(doctorService.getAllDoctors(pageable));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<DoctorResponse> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(doctorService.getById(id));
+        return ResponseEntity.ok(doctorService.getDoctorById(id));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<DoctorResponse> update(@PathVariable Long id, @Valid @RequestBody UpdateDoctorRequest request) {
-        return ResponseEntity.ok(doctorService.update(id, request));
+        return ResponseEntity.ok(doctorService.updateDoctor(id, request));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<MessageResponse> delete(@PathVariable Long id) {
-        return ResponseEntity.ok(doctorService.delete(id));
+    public ResponseEntity<String> delete(@PathVariable Long id) {
+        return ResponseEntity.ok(doctorService.deleteDoctor(id));
     }
 }

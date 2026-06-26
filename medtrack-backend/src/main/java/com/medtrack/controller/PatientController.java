@@ -1,9 +1,11 @@
 package com.medtrack.controller;
 
-import com.medtrack.dto.*;
+import com.medtrack.dto.FamilyDoctorRequest;
+import com.medtrack.dto.PatientRequest;
+import com.medtrack.dto.PatientResponse;
+import com.medtrack.dto.PrescriptionResponse;
 import com.medtrack.service.PatientService;
 import com.medtrack.service.PrescriptionService;
-import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -23,37 +25,40 @@ public class PatientController {
     }
 
     @PostMapping
-    public ResponseEntity<PatientResponse> create(@Valid @RequestBody CreatePatientRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(patientService.create(request));
-    }
-
-    @GetMapping
-    public ResponseEntity<Page<PatientResponse>> getAll(Pageable pageable) {
-        return ResponseEntity.ok(patientService.getAll(pageable));
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<PatientResponse> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(patientService.getById(id));
+    public ResponseEntity<PatientResponse> createPatient(@RequestBody PatientRequest request) {
+        return new ResponseEntity<>(patientService.createPatient(request), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PatientResponse> update(@PathVariable Long id, @Valid @RequestBody UpdatePatientRequest request) {
-        return ResponseEntity.ok(patientService.update(id, request));
+    public ResponseEntity<PatientResponse> updatePatient(@PathVariable Long id, @RequestBody PatientRequest request) {
+        return ResponseEntity.ok(patientService.updatePatient(id, request));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<PatientResponse> getPatientById(@PathVariable Long id) {
+        return ResponseEntity.ok(patientService.getPatientById(id));
+    }
+
+    @GetMapping
+    public ResponseEntity<Page<PatientResponse>> getAllPatients(Pageable pageable) {
+        return ResponseEntity.ok(patientService.getAllPatients(pageable));
     }
 
     @GetMapping("/{id}/prescriptions")
-    public ResponseEntity<Page<PrescriptionResponse>> getPrescriptions(@PathVariable Long id, Pageable pageable) {
-        return ResponseEntity.ok(prescriptionService.getPrescriptions(id, pageable));
+    public ResponseEntity<Page<PrescriptionResponse>> getPatientPrescriptions(@PathVariable Long id, Pageable pageable) {
+        Page<PrescriptionResponse> prescriptions = prescriptionService.getPatientPrescriptions(id, pageable);
+        return ResponseEntity.ok(prescriptions);
     }
 
     @PatchMapping("/{id}/family-doctor")
-    public ResponseEntity<PatientResponse> updateFamilyDoctor(@PathVariable Long id, @Valid @RequestBody FamilyDoctorRequest request) {
-        return ResponseEntity.ok(patientService.updateFamilyDoctor(id, request));
+    public ResponseEntity<PatientResponse> updateFamilyDoctor(@PathVariable Long id, @RequestBody FamilyDoctorRequest request) {
+        PatientResponse body = patientService.updateDoctorFamily(id, request);
+        return ResponseEntity.ok(body);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<MessageResponse> delete(@PathVariable Long id) {
-        return ResponseEntity.ok(patientService.delete(id));
+    public ResponseEntity<Void> deletePatient(@PathVariable Long id) {
+        patientService.deletePatient(id);
+        return ResponseEntity.noContent().build();
     }
 }
