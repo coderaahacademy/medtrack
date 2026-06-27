@@ -3,6 +3,7 @@ package com.medtrack.service;
 import com.medtrack.dto.*;
 import com.medtrack.entity.Doctor;
 import com.medtrack.entity.User;
+import com.medtrack.entity.UserRole;
 import com.medtrack.enums.Role;
 import com.medtrack.repository.DoctorRepository;
 import com.medtrack.repository.PatientRepository;
@@ -27,58 +28,76 @@ public class DoctorService {
     }
 
     @Transactional
-    public DoctorResponse create(CreateDoctorRequest request) {
+    public DoctorResponse createDoctor(CreateDoctorRequest request) {
         Long userId = request.getUserId();
-        User user = userRepository.findByIdOrThrow(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found with ID: " + userId));
+
         if (doctorRepository.existsByUserId(userId)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Doctor profile already exists for user ID: " + userId);
         }
         Doctor doctor = new Doctor();
-        mapRequestToEntity(request,doctor);
-        user.addRole(Role.DOCTOR);
-        userRepository.saveAndFlush(user);
-        doctor.setUser(user);
-        return toResponse(doctorRepository.saveAndFlush(doctor));
-    }
-
-    @Transactional
-    public DoctorResponse update(Long id, UpdateDoctorRequest request) {
-        Doctor doctor = doctorRepository.findByIdOrThrow(id);
-        mapRequestToEntity(request,doctor);
-        return toResponse(doctorRepository.saveAndFlush(doctor));
-    }
-
-    @Transactional(readOnly = true)
-    public DoctorResponse getById(Long id) {
-        return toResponse(doctorRepository.findByIdOrThrow(id));
-    }
-
-    @Transactional(readOnly = true)
-    public Page<DoctorResponse> getAll(Pageable pageable) {
-        return doctorRepository.findAll(pageable).map(this::toResponse);
-    }
-
-    @Transactional
-    public MessageResponse delete(Long id) {
-        Doctor doctor = doctorRepository.findByIdOrThrow(id);
-        User user = doctor.getUser();
-        user.removeRole(Role.DOCTOR);
-        patientRepository.unassignFamilyDoctor(id);
-        doctorRepository.delete(doctor);
-        userRepository.saveAndFlush(user);
-        return new MessageResponse("Doctor ID " + id + " was successfully deleted.");
-    }
-
-    private void mapRequestToEntity(DoctorRequest request, Doctor doctor) {
         doctor.setFullName(request.getFullName());
         doctor.setSpecialization(request.getSpecialization());
         doctor.setLicenseNumber(request.getLicenseNumber());
         doctor.setPhone(request.getPhone());
         doctor.setActive(request.isActive());
+        
+        boolean hasDoctorRole = user.getRoles().stream().anyMatch(r -> r.getRole() == Role.DOCTOR);
+        if (!hasDoctorRole) {
+            UserRole role = new UserRole();
+            role.setRole(Role.DOCTOR);
+            role.setUser(user);
+            user.getRoles().add(role);
+            userRepository.save(user);
+        }
+        doctor.setUser(user);
+        Doctor savedDoctor = doctorRepository.save(doctor);
+        return toResponse(savedDoctor);
+    }
+
+    @Transactional
+    public DoctorResponse updateDoctor(Long id, UpdateDoctorRequest request) {
+        Doctor doctor = doctorRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Doctor not found with ID: " + id));
+        doctor.setFullName(request.getFullName());
+        doctor.setSpecialization(request.getSpecialization());
+        doctor.setLicenseNumber(request.getLicenseNumber());
+        doctor.setPhone(request.getPhone());
+        doctor.setActive(request.isActive());
+        Doctor savedDoctor = doctorRepository.save(doctor);
+        return toResponse(savedDoctor);
+    }
+
+    @Transactional(readOnly = true)
+    public DoctorResponse getDoctorById(Long id) {
+        Doctor doctor = doctorRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Doctor not found with ID: " + id));
+        return toResponse(doctor);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<DoctorResponse> getAllDoctors(Pageable pageable) {
+        Page<Doctor> doctorPage = doctorRepository.findAll(pageable);
+        return doctorPage.map(this::toResponse);
+    }
+
+    @Transactional
+    public String deleteDoctor(Long id) {
+        Doctor doctor = doctorRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Doctor not found with ID: " + id));
+        User user = doctor.getUser();
+        user.getRoles().removeIf(r -> r.getRole() == Role.DOCTOR);
+        patientRepository.unassignFamilyDoctor(id);
+        doctorRepository.delete(doctor);
+        userRepository.saveAndFlush(user);
+        return "Doctor ID " + id + " was successfully deleted.";
     }
 
     private DoctorResponse toResponse(Doctor doctor) {
         DoctorResponse response = new DoctorResponse();
+        response.setId(doctor.getId());
+        response.setUserId(doctor.getUser().getId());
         response.setFullName(doctor.getFullName());
         response.setSpecialization(doctor.getSpecialization());
         response.setLicenseNumber(doctor.getLicenseNumber());
@@ -86,8 +105,6 @@ public class DoctorService {
         response.setActive(doctor.isActive());
         response.setCreatedAt(doctor.getCreatedAt());
         response.setUpdatedAt(doctor.getUpdatedAt());
-        response.setUserId(doctor.getUser().getId());
-        response.setId(doctor.getId());
         return response;
     }
 }

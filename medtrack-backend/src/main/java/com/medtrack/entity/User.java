@@ -1,6 +1,5 @@
 package com.medtrack.entity;
 
-import com.medtrack.enums.Role;
 import com.medtrack.enums.UserStatus;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -41,24 +40,6 @@ public class User {
     private Doctor doctor;
 
     public User() {
-    }
-
-    public boolean hasRole(Role targetRole) {
-        return this.roles.stream()
-                .anyMatch(r -> r.getRole() == targetRole);
-    }
-
-    public void addRole(Role targetRole) {
-        if (!hasRole(targetRole)) {
-            UserRole newRole = new UserRole();
-            newRole.setRole(targetRole);
-            newRole.setUser(this);
-            this.roles.add(newRole);
-        }
-    }
-
-    public void removeRole(Role targetRole) {
-        this.roles.removeIf(r -> r.getRole() == targetRole);
     }
 
     public Patient getPatient() {
