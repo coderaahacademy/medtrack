@@ -21,5 +21,5 @@ public class PatientTimelineController {
     public ResponseEntity<List<TimelineItemDTO>> getPatientTimeline(@PathVariable Long patientId) {
         return ResponseEntity.ok(timelineService.getPatientTimeline(patientId));
     }
-    }
+
 }
