@@ -5,7 +5,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface PrescriptionRepository extends BaseRepository<Prescription, Long> {
     Page<Prescription> findByPatientId(Long patientId, Pageable pageable);
+    List<Prescription> findAllByPatientId(Long patientId);
 }
