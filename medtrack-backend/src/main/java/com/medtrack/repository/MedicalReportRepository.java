@@ -7,4 +7,5 @@ import java.util.List;
 @Repository
 public interface MedicalReportRepository extends BaseRepository<MedicalReport, Long> {
     List<MedicalReport> findByPatientId(Long patientId);
+    List<MedicalReport> findAllByPatientId(Long patientId);
 }

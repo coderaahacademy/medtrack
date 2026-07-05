@@ -3,6 +3,7 @@ package com.medtrack.dto;
 import java.time.LocalDateTime;
 
 public class TimelineItemResponse {
+    private Long id;
     private String type;
     private LocalDateTime date;
     private String title;
@@ -11,11 +12,20 @@ public class TimelineItemResponse {
     public TimelineItemResponse() {
     }
 
-    public TimelineItemResponse(String type, LocalDateTime date, String title, String description) {
+    public TimelineItemResponse(Long id, String type, LocalDateTime date, String title, String description) {
+        this.id = id;
         this.type = type;
         this.date = date;
         this.title = title;
         this.description = description;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getType() {
