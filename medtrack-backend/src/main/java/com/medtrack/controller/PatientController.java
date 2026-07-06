@@ -9,6 +9,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.medtrack.service.TimelineService;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/patients")
@@ -16,10 +18,11 @@ public class PatientController {
 
     private final PatientService patientService;
     private final PrescriptionService prescriptionService;
-
-    public PatientController(PatientService patientService, PrescriptionService prescriptionService) {
+    private final TimelineService timelineService;
+    public PatientController(PatientService patientService, PrescriptionService  prescriptionService , TimelineService timelineService) {
         this.patientService = patientService;
         this.prescriptionService = prescriptionService;
+        this.timelineService = timelineService;
     }
 
     @PostMapping
@@ -55,5 +58,10 @@ public class PatientController {
     @DeleteMapping("/{id}")
     public ResponseEntity<MessageResponse> delete(@PathVariable Long id) {
         return ResponseEntity.ok(patientService.delete(id));
+    }
+    @GetMapping("/{patientId}/timeline")
+    public ResponseEntity<List<TimelineItemResponse>> getPatientTimeline(@PathVariable Long patientId) {
+        List<TimelineItemResponse> timeline = timelineService.getPatientTimeline(patientId);
+        return ResponseEntity.ok(timeline);
     }
 }
