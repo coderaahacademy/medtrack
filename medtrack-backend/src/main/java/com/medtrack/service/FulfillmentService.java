@@ -50,6 +50,50 @@ public class FulfillmentService {
 
 
     }
+    public FulfillmentResponse preparing(Long id) {
+
+        PrescriptionFulfillment fulfillment = getById(id);
+
+        if (fulfillment.getStatus() != FulfillmentStatus.ACCEPTED) {
+            throw new IllegalArgumentException(
+                    "Only ACCEPTED fulfillments can be moved to PREPARING. Current status: "
+                            + fulfillment.getStatus());
+        }
+
+        fulfillment.setStatus(FulfillmentStatus.PREPARING);
+
+        return toResponse(prescriptionFulfillmentRepository.saveAndFlush(fulfillment));
+    }
+    public FulfillmentResponse ready(Long id) {
+
+        PrescriptionFulfillment fulfillment = getById(id);
+
+        if (fulfillment.getStatus() != FulfillmentStatus.PREPARING) {
+            throw new IllegalArgumentException(
+                    "Only PREPARING fulfillments can be moved to READY_FOR_PICKUP. Current status: "
+                            + fulfillment.getStatus());
+        }
+
+        fulfillment.setStatus(FulfillmentStatus.READY_FOR_PICKUP);
+        fulfillment.setReadyAt(LocalDateTime.now());
+
+        return toResponse(prescriptionFulfillmentRepository.saveAndFlush(fulfillment));
+    }
+    public FulfillmentResponse completed(Long id) {
+
+        PrescriptionFulfillment fulfillment = getById(id);
+
+        if (fulfillment.getStatus() != FulfillmentStatus.READY_FOR_PICKUP) {
+            throw new IllegalArgumentException(
+                    "Only READY_FOR_PICKUP fulfillments can be moved to COMPLETED. Current status: "
+                            + fulfillment.getStatus());
+        }
+
+        fulfillment.setStatus(FulfillmentStatus.COMPLETED);
+        fulfillment.setCompletedAt(LocalDateTime.now());
+
+        return toResponse(prescriptionFulfillmentRepository.saveAndFlush(fulfillment));
+    }
     private PrescriptionFulfillment getById(Long id) {
         return prescriptionFulfillmentRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(
@@ -82,6 +126,8 @@ public class FulfillmentService {
         response.setPharmacyId(fulfillment.getPharmacy().getId());
         response.setStatus(fulfillment.getStatus());
         response.setAcceptedAt(fulfillment.getAcceptedAt());
+        response.setReadyAt(fulfillment.getReadyAt());
+        response.setCompletedAt(fulfillment.getCompletedAt());
         response.setRejectionReason(fulfillment.getRejectionReason());
         response.setUpdatedAt(fulfillment.getUpdatedAt());
         return response;

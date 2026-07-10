@@ -28,4 +28,18 @@ public class FulfillmentController {
             @Valid @RequestBody RejectFulfillmentRequest request) {
         return ResponseEntity.ok(fulfillmentService.reject(id, request));
     }
+    @PatchMapping("/{id}/preparing")
+    public ResponseEntity<FulfillmentResponse> preparing(@PathVariable Long id) {
+        return ResponseEntity.ok(fulfillmentService.preparing(id));
+    }
+
+    @PatchMapping("/{id}/ready")
+    public ResponseEntity<FulfillmentResponse> ready(@PathVariable Long id) {
+        return ResponseEntity.ok(fulfillmentService.ready(id));
+    }
+
+    @PatchMapping("/{id}/completed")
+    public ResponseEntity<FulfillmentResponse> completed(@PathVariable Long id) {
+        return ResponseEntity.ok(fulfillmentService.completed(id));
+    }
 }

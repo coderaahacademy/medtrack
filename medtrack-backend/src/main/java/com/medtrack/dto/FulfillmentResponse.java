@@ -11,6 +11,8 @@ public class FulfillmentResponse {
     private Long pharmacyId;
     private FulfillmentStatus status;
     private LocalDateTime acceptedAt;
+    private LocalDateTime readyAt;
+    private LocalDateTime completedAt;
     private String rejectionReason;
     private LocalDateTime updatedAt;
 
@@ -43,6 +45,21 @@ public class FulfillmentResponse {
     }
     public void setAcceptedAt(LocalDateTime acceptedAt) {
         this.acceptedAt = acceptedAt;
+    }
+    public LocalDateTime getReadyAt() {
+        return readyAt;
+    }
+
+    public void setReadyAt(LocalDateTime readyAt) {
+        this.readyAt = readyAt;
+    }
+
+    public LocalDateTime getCompletedAt() {
+        return completedAt;
+    }
+
+    public void setCompletedAt(LocalDateTime completedAt) {
+        this.completedAt = completedAt;
     }
     public String getRejectionReason() {
         return rejectionReason;
