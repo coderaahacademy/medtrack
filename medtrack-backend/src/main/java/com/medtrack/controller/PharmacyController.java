@@ -28,4 +28,23 @@ public class PharmacyController {
     public ResponseEntity<Page<PharmacyResponse>> getAll(Pageable pageable) {
         return ResponseEntity.ok(pharmacyService.getAll(pageable));
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<PharmacyResponse> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(pharmacyService.getById(id));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<PharmacyResponse> update(
+            @PathVariable Long id,
+            @Valid @RequestBody PharmacyRequest request) {
+
+        return ResponseEntity.ok(pharmacyService.update(id, request));
+    }
+
+    @PatchMapping("/{id}/deactivate")
+    public ResponseEntity<PharmacyResponse> deactivate(@PathVariable Long id) {
+
+        return ResponseEntity.ok(pharmacyService.deactivate(id));
+    }
 }
