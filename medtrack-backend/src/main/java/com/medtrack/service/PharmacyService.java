@@ -7,6 +7,7 @@ import com.medtrack.repository.PharmacyRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PharmacyService {
@@ -28,6 +29,33 @@ public class PharmacyService {
 
     public Page<PharmacyResponse> getAll(Pageable pageable){
         return pharmacyRepository.findAll(pageable).map(this::toResponse);
+    }
+    @Transactional(readOnly = true)
+    public PharmacyResponse getById(Long id) {
+        return toResponse(pharmacyRepository.findByIdOrThrow(id));
+    }
+
+    @Transactional
+    public PharmacyResponse update(Long id, PharmacyRequest request) {
+
+        Pharmacy pharmacy = pharmacyRepository.findByIdOrThrow(id);
+        pharmacy.setName(request.getName());
+        pharmacy.setAddress(request.getAddress());
+        pharmacy.setPhone(request.getPhone());
+        pharmacy.setEmail(request.getEmail());
+        pharmacy.setActive(request.isActive());
+        pharmacyRepository.saveAndFlush(pharmacy);
+        return toResponse(pharmacy);
+
+    }
+
+    @Transactional
+    public PharmacyResponse deactivate(Long id) {
+
+        Pharmacy pharmacy = pharmacyRepository.findByIdOrThrow(id);
+        pharmacy.setActive(false);
+        pharmacyRepository.saveAndFlush(pharmacy);
+        return toResponse(pharmacy);
     }
 
     private PharmacyResponse toResponse(Pharmacy pharmacy) {
