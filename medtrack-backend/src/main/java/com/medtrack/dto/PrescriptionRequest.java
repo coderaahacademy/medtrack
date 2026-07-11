@@ -18,7 +18,6 @@ public class PrescriptionRequest {
     @NotNull(message = "Doctor ID is required")
     @Positive(message = "Doctor ID must be a valid number")
     private Long doctorId;
-    @NotNull(message = "Visit ID is required")
     @Positive(message = "Visit ID must be a valid number")
     private Long visitId;
     @NotEmpty(message = "A prescription must contain at least one medication item")

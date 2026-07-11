@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.medtrack.enums.PrescriptionStatus;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,17 +35,20 @@ public class PrescriptionService {
     public PrescriptionResponse create(PrescriptionRequest request) {
         Long patientId = request.getPatientId();
         Long doctorId = request.getDoctorId();
-        Long visitId = request.getVisitId();
 
         Patient patient = patientRepository.findByIdOrThrow(patientId);
         Doctor doctor = doctorRepository.findByIdOrThrow(doctorId);
-        Visit visit = visitRepository.findByIdOrThrow(visitId);
+        Visit visit = null;
+
+        if (request.getVisitId() != null) {
+            visit = visitRepository.findByIdOrThrow(request.getVisitId());
+        }
 
         Prescription prescription = new Prescription();
         prescription.setPatient(patient);
         prescription.setDoctor(doctor);
         prescription.setVisit(visit);
-        prescription.setStatus(request.getStatus());
+        prescription.setStatus(PrescriptionStatus.ISSUED);
         prescription.setIssueDate(request.getIssueDate());
         prescription.setNotes(request.getNotes());
         request.getItems().forEach(itemRequest -> {
