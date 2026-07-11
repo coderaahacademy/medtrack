@@ -30,8 +30,7 @@ public class InventoryService {
     }
 
     @Transactional
-    public InventoryResponse create(InventoryRequest request) {
-        Long pharmacyId = request.getPharmacyId();
+    public InventoryResponse create(Long pharmacyId, InventoryRequest request) {
         Long medicationId = request.getMedicationId();
 
         if (inventoryRepository.existsByPharmacyIdAndMedicationId(pharmacyId, medicationId)) {
@@ -54,9 +53,9 @@ public class InventoryService {
     }
 
     @Transactional
-    public InventoryResponse update(InventoryRequest request) {
+    public InventoryResponse update(Long pharmacyId, Long medicationId, InventoryRequest request) {
         PharmacyInventory inventory = inventoryRepository
-                .findByPharmacyIdAndMedicationId(request.getPharmacyId(), request.getMedicationId())
+                .findByPharmacyIdAndMedicationId(pharmacyId, medicationId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Inventory record not found."
@@ -71,6 +70,13 @@ public class InventoryService {
     @Transactional(readOnly = true)
     public List<InventoryResponse> getLowStockInventory(Long pharmacyId) {
         return inventoryRepository.findLowStockByPharmacyId(pharmacyId)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+    @Transactional(readOnly = true)
+    public List<InventoryResponse> getByPharmacy(Long pharmacyId) {
+        return inventoryRepository.findByPharmacyId(pharmacyId)
                 .stream()
                 .map(this::toResponse)
                 .toList();
