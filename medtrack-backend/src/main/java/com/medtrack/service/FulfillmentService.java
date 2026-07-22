@@ -8,6 +8,7 @@ import com.medtrack.repository.PrescriptionFulfillmentRepository;
 import org.springframework.stereotype.Service;
 import com.medtrack.entity.PharmacyInventory;
 import com.medtrack.entity.PrescriptionItem;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -79,6 +80,7 @@ public class FulfillmentService {
 
         return toResponse(prescriptionFulfillmentRepository.saveAndFlush(fulfillment));
     }
+    @Transactional
     public FulfillmentResponse completed(Long id) {
 
         PrescriptionFulfillment fulfillment = getById(id);
@@ -91,6 +93,7 @@ public class FulfillmentService {
 
         fulfillment.setStatus(FulfillmentStatus.COMPLETED);
         fulfillment.setCompletedAt(LocalDateTime.now());
+        reduceInventory(fulfillment);
 
         return toResponse(prescriptionFulfillmentRepository.saveAndFlush(fulfillment));
     }
@@ -117,6 +120,32 @@ public class FulfillmentService {
                                 + ". Required: " + required
                                 + ", available: " + inventory.getQuantityAvailable());
             }
+        }
+    }
+
+    private void reduceInventory(PrescriptionFulfillment fulfillment) {
+
+        Long pharmacyId = fulfillment.getPharmacy().getId();
+
+        for (PrescriptionItem item : fulfillment.getPrescription().getItems()) {
+
+            Long medicationId = item.getMedication().getId();
+
+            PharmacyInventory inventory = inventoryRepository
+                    .findByPharmacyIdAndMedicationId(pharmacyId, medicationId)
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "No inventory found for medication id " + medicationId));
+
+            int remaining = inventory.getQuantityAvailable() - item.getQuantity();
+
+            if (remaining < 0) {
+                throw new IllegalArgumentException(
+                        "Insufficient inventory for medication id " + medicationId);
+            }
+
+            inventory.setQuantityAvailable(remaining);
+
+            inventoryRepository.save(inventory);
         }
     }
     private FulfillmentResponse toResponse(PrescriptionFulfillment fulfillment) {
