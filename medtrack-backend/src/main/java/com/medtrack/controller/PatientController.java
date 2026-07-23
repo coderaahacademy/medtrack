@@ -1,6 +1,7 @@
 package com.medtrack.controller;
 
 import com.medtrack.dto.*;
+import com.medtrack.enums.PrescriptionStatus;
 import com.medtrack.service.PatientService;
 import com.medtrack.service.PrescriptionService;
 import jakarta.validation.Valid;
@@ -45,9 +46,9 @@ public class PatientController {
         return ResponseEntity.ok(patientService.update(id, request));
     }
 
-    @GetMapping("/{id}/prescriptions")
-    public ResponseEntity<Page<PrescriptionResponse>> getPrescriptions(@PathVariable Long id, Pageable pageable) {
-        return ResponseEntity.ok(prescriptionService.getPrescriptions(id, pageable));
+    @GetMapping("/{patientId}/prescriptions")
+    public ResponseEntity<Page<PrescriptionResponse>> getPatientPrescriptions(@PathVariable Long patientId,@RequestParam(required = false) PrescriptionStatus status, Pageable pageable) {
+        return ResponseEntity.ok(prescriptionService.getPatientPrescriptions(patientId,status,pageable));
     }
 
     @PatchMapping("/{id}/family-doctor")

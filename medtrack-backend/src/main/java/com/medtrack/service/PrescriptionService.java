@@ -4,6 +4,7 @@ import com.medtrack.dto.PrescriptionItemResponse;
 import com.medtrack.dto.PrescriptionRequest;
 import com.medtrack.dto.PrescriptionResponse;
 import com.medtrack.entity.*;
+import com.medtrack.exception.ResourceNotFoundException;
 import com.medtrack.repository.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -114,6 +115,23 @@ public class PrescriptionService {
     @Transactional(readOnly = true)
     public PrescriptionResponse getById(Long id) {
         return toResponse(prescriptionRepository.findByIdOrThrow(id));
+    }
+
+    @Transactional(readOnly = true)
+    public Page<PrescriptionResponse> getPatientPrescriptions(Long patientId, PrescriptionStatus status, Pageable pageable) {
+        if (!patientRepository.existsById(patientId)) {
+            throw new ResourceNotFoundException("Patient not found with id: " + patientId);
+        }
+
+        Page<Prescription> prescriptions;
+
+        if (status != null) {
+            prescriptions = prescriptionRepository.findAllByPatientIdAndStatus(patientId, status, pageable);
+        } else {
+            prescriptions = prescriptionRepository.findAllByPatientId(patientId, pageable);
+        }
+
+        return prescriptions.map(this::toResponse);
     }
 
 
