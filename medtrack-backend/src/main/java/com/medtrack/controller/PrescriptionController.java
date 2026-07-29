@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.medtrack.dto.PrescriptionStatusUpdateRequest;
 
 @RestController
 @RequestMapping("/api/prescriptions")
@@ -33,6 +34,18 @@ public class PrescriptionController {
     @GetMapping("/{id}")
     public ResponseEntity<PrescriptionResponse> getById(@PathVariable Long id){
         return ResponseEntity.ok(prescriptionService.getById(id));
+    }
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<PrescriptionResponse> updateStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody PrescriptionStatusUpdateRequest request) {
+
+        return ResponseEntity.ok(
+                prescriptionService.updateStatus(
+                        id,
+                        request.getStatus()
+                )
+        );
     }
 
 }

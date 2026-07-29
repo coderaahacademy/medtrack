@@ -133,6 +133,19 @@ public class PrescriptionService {
 
         return prescriptions.map(this::toResponse);
     }
+    @Transactional
+    public PrescriptionResponse updateStatus(
+            Long id,
+            PrescriptionStatus newStatus) {
 
+        Prescription prescription =
+                prescriptionRepository.findByIdOrThrow(id);
+
+        prescription.setStatus(newStatus);
+
+        return toResponse(
+                prescriptionRepository.save(prescription)
+        );
+    }
 
 }
