@@ -180,7 +180,8 @@ public class PrescriptionService {
 
             case SENT_TO_PHARMACY:
                 if (newStatus != PrescriptionStatus.PARTIALLY_FULFILLED &&
-                        newStatus != PrescriptionStatus.CANCELLED) {
+                        newStatus != PrescriptionStatus.CANCELLED &&
+                        newStatus != PrescriptionStatus.COMPLETED) {
                     throw new InvalidStatusTransitionException(
                             "Invalid transition from SENT_TO_PHARMACY to " + newStatus
                     );
@@ -196,6 +197,11 @@ public class PrescriptionService {
                     );
                 }
                 break;
+
+            default:
+                throw new InvalidStatusTransitionException(
+                        "Unsupported transition from " + currentStatus
+                );
         }
     }
 }
