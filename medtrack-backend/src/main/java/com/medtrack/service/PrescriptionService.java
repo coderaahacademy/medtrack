@@ -12,6 +12,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.medtrack.enums.PrescriptionStatus;
 import com.medtrack.exception.InvalidStatusTransitionException;
+import java.util.HashSet;
+import java.util.Set;
+import com.medtrack.dto.PrescriptionItemRequest;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,6 +44,15 @@ public class PrescriptionService {
 
     @Transactional
     public PrescriptionResponse create(PrescriptionRequest request) {
+        Set<Long> medicationIds = new HashSet<>();
+
+        for (PrescriptionItemRequest item : request.getItems()) {
+            if (!medicationIds.add(item.getMedicationId())) {
+                throw new IllegalArgumentException(
+                        "Duplicate medications are not allowed."
+                );
+            }
+        }
         Long patientId = request.getPatientId();
         Long doctorId = request.getDoctorId();
 
