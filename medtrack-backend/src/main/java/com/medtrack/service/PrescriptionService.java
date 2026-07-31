@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.medtrack.enums.PrescriptionStatus;
+import com.medtrack.exception.InvalidStatusTransitionException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -133,6 +134,74 @@ public class PrescriptionService {
 
         return prescriptions.map(this::toResponse);
     }
+    @Transactional
+    public PrescriptionResponse updateStatus(
+            Long id,
+            PrescriptionStatus newStatus) {
+
+        Prescription prescription =
+                prescriptionRepository.findByIdOrThrow(id);
+
+        validateStatusTransition(
+                prescription.getStatus(),
+                newStatus
+        );
+
+        prescription.setStatus(newStatus);
+
+        return toResponse(
+                prescriptionRepository.save(prescription)
+        );
+    }
+    private void validateStatusTransition(
+            PrescriptionStatus currentStatus,
+            PrescriptionStatus newStatus
+    ) {
+
+        if (currentStatus == PrescriptionStatus.COMPLETED ||
+                currentStatus == PrescriptionStatus.CANCELLED) {
+
+            throw new InvalidStatusTransitionException(
+                    "Cannot change status from " + currentStatus
+            );
+        }
+
+        switch (currentStatus) {
+
+            case ISSUED:
+                if (newStatus != PrescriptionStatus.SENT_TO_PHARMACY &&
+                        newStatus != PrescriptionStatus.CANCELLED) {
+                    throw new InvalidStatusTransitionException(
+                            "Invalid transition from ISSUED to " + newStatus
+                    );
+                }
+                break;
 
 
+            case SENT_TO_PHARMACY:
+                if (newStatus != PrescriptionStatus.PARTIALLY_FULFILLED &&
+                        newStatus != PrescriptionStatus.CANCELLED &&
+                        newStatus != PrescriptionStatus.COMPLETED) {
+                    throw new InvalidStatusTransitionException(
+                            "Invalid transition from SENT_TO_PHARMACY to " + newStatus
+                    );
+                }
+                break;
+
+
+            case PARTIALLY_FULFILLED:
+                if (newStatus != PrescriptionStatus.COMPLETED &&
+                        newStatus != PrescriptionStatus.CANCELLED) {
+                    throw new InvalidStatusTransitionException(
+                            "Invalid transition from PARTIALLY_FULFILLED to " + newStatus
+                    );
+                }
+                break;
+
+            default:
+                throw new InvalidStatusTransitionException(
+                        "Unsupported transition from " + currentStatus
+                );
+        }
+    }
 }
