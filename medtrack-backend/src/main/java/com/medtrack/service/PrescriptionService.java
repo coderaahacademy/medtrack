@@ -18,19 +18,25 @@ import java.util.stream.Collectors;
 
 @Service
 public class PrescriptionService {
+    private final PrescriptionAuditHistoryService auditHistoryService;
     private final PrescriptionRepository prescriptionRepository;
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
     private final VisitRepository visitRepository;
     private final MedicationRepository medicationRepository;
 
-    public PrescriptionService(PrescriptionRepository prescriptionRepository, PatientRepository patientRepository, DoctorRepository doctorRepository,
-                               VisitRepository visitRepository, MedicationRepository medicationRepository) {
+    public PrescriptionService(PrescriptionRepository prescriptionRepository,
+                               PatientRepository patientRepository,
+                               DoctorRepository doctorRepository,
+                               VisitRepository visitRepository,
+                               MedicationRepository medicationRepository,
+                               PrescriptionAuditHistoryService auditHistoryService) {
         this.prescriptionRepository = prescriptionRepository;
         this.patientRepository = patientRepository;
         this.doctorRepository = doctorRepository;
         this.visitRepository = visitRepository;
         this.medicationRepository = medicationRepository;
+        this.auditHistoryService = auditHistoryService;
     }
 
     @Transactional
@@ -67,8 +73,9 @@ public class PrescriptionService {
             item.setInstructions(itemRequest.getInstructions());
             prescription.addItem(item);
         });
-        return toResponse(prescriptionRepository.saveAndFlush(prescription));
-    }
+        Prescription saved = prescriptionRepository.saveAndFlush(prescription);
+        auditHistoryService.recordAudit(saved.getId(), null, saved.getStatus(), "Prescription created");
+        return toResponse(saved);    }
 
     @Transactional(readOnly = true)
     public Page<PrescriptionResponse> getPrescriptions(Long patientId, Pageable pageable) {
@@ -147,11 +154,11 @@ public class PrescriptionService {
                 newStatus
         );
 
+        PrescriptionStatus oldStatus = prescription.getStatus();
         prescription.setStatus(newStatus);
-
-        return toResponse(
-                prescriptionRepository.save(prescription)
-        );
+        Prescription saved = prescriptionRepository.save(prescription);
+        auditHistoryService.recordAudit(saved.getId(), oldStatus, newStatus, "Status updated");
+        return toResponse(saved);
     }
     private void validateStatusTransition(
             PrescriptionStatus currentStatus,
