@@ -15,4 +15,9 @@ public class PrescriptionStatusUpdateRequest {
     public void setStatus(PrescriptionStatus status) {
         this.status = status;
     }
+
+    private String reason;
+
+    public String getReason() { return reason; }
+    public void setReason(String reason) { this.reason = reason; }
 }

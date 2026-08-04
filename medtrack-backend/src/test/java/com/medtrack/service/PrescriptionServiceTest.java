@@ -85,7 +85,8 @@ class PrescriptionServiceTest {
 
         var response = prescriptionService.updateStatus(
                 1L,
-                PrescriptionStatus.SENT_TO_PHARMACY
+                PrescriptionStatus.SENT_TO_PHARMACY,
+                null
         );
 
 
@@ -112,7 +113,8 @@ class PrescriptionServiceTest {
 
         var response = prescriptionService.updateStatus(
                 1L,
-                PrescriptionStatus.COMPLETED
+                PrescriptionStatus.COMPLETED,
+                null
         );
 
 
@@ -138,7 +140,8 @@ class PrescriptionServiceTest {
                 InvalidStatusTransitionException.class,
                 () -> prescriptionService.updateStatus(
                         1L,
-                        PrescriptionStatus.ISSUED
+                        PrescriptionStatus.ISSUED,
+                        null
                 )
         );
     }
@@ -159,7 +162,8 @@ class PrescriptionServiceTest {
                 InvalidStatusTransitionException.class,
                 () -> prescriptionService.updateStatus(
                         1L,
-                        PrescriptionStatus.SENT_TO_PHARMACY
+                        PrescriptionStatus.SENT_TO_PHARMACY,
+                        null
                 )
         );
     }
@@ -180,7 +184,8 @@ class PrescriptionServiceTest {
                 InvalidStatusTransitionException.class,
                 () -> prescriptionService.updateStatus(
                         1L,
-                        PrescriptionStatus.ISSUED
+                        PrescriptionStatus.ISSUED,
+                        null
                 )
         );
     }

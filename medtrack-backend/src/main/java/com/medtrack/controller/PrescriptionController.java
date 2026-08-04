@@ -1,5 +1,6 @@
 package com.medtrack.controller;
 
+import com.medtrack.dto.CancelPrescriptionRequest;
 import com.medtrack.dto.PrescriptionRequest;
 import com.medtrack.dto.PrescriptionResponse;
 import com.medtrack.service.PrescriptionService;
@@ -14,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.medtrack.dto.PrescriptionStatusUpdateRequest;
+import com.medtrack.enums.PrescriptionStatus;
 
 @RestController
 @RequestMapping("/api/prescriptions")
@@ -52,9 +54,19 @@ public class PrescriptionController {
             @Valid @RequestBody PrescriptionStatusUpdateRequest request) {
 
         return ResponseEntity.ok(
+                prescriptionService.updateStatus(id, request.getStatus(), request.getReason()
+                )
+        );
+    }
+    @PatchMapping("/{id}/cancel")
+    public ResponseEntity<PrescriptionResponse> cancelPrescription(
+            @PathVariable Long id,
+            @Valid @RequestBody CancelPrescriptionRequest request) {
+        return ResponseEntity.ok(
                 prescriptionService.updateStatus(
                         id,
-                        request.getStatus()
+                        PrescriptionStatus.CANCELLED,
+                        request.getReason()
                 )
         );
     }

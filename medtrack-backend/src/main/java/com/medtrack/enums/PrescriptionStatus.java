@@ -6,5 +6,8 @@ public enum PrescriptionStatus {
     SENT_TO_PHARMACY,
     PARTIALLY_FULFILLED,
     COMPLETED,
-    CANCELLED
+    CANCELLED,
+    REVOKED
+
+
 }
