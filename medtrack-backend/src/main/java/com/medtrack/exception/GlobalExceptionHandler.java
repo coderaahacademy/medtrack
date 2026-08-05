@@ -6,11 +6,14 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-
+import com.medtrack.dto.ErrorResponseDto;
+import com.medtrack.dto.FieldErrorDto;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -49,22 +52,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
     }
 
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponseDto> handleMalformedInputException(
+            HttpMessageNotReadableException ex, HttpServletRequest request) {
 
-    @ExceptionHandler(InvalidStatusTransitionException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidStatusTransition(InvalidStatusTransitionException ex) {
-        return buildResponse(
-                HttpStatus.CONFLICT,
-                ex.getMessage() != null ? ex.getMessage() : "Invalid state transition"
+        ErrorResponseDto response = new ErrorResponseDto(
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                "MALFORMED_INPUT",
+                "Required request body is missing or invalid JSON format",
+                request.getRequestURI()
         );
-    }
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleUnexpectedException(Exception ex) {
-        return buildResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                "An unexpected internal server error occurred."
-        );
-    }
 
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
     private ResponseEntity<ErrorResponse> buildResponse(HttpStatus status, String message) {
 
         ErrorResponse response = new ErrorResponse(
