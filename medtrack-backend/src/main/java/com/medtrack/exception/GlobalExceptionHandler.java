@@ -1,5 +1,4 @@
 package com.medtrack.exception;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -14,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 import com.medtrack.dto.ErrorResponseDto;
 import com.medtrack.dto.FieldErrorDto;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -61,11 +61,13 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.getReasonPhrase(),
                 "MALFORMED_INPUT",
                 "Required request body is missing or invalid JSON format",
-                request.getRequestURI()
+                request.getRequestURI(),
+                LocalDateTime.now(),
+                null
         );
-
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
+
     private ResponseEntity<ErrorResponse> buildResponse(HttpStatus status, String message) {
 
         ErrorResponse response = new ErrorResponse(
