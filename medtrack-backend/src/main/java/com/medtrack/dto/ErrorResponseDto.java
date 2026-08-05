@@ -12,19 +12,22 @@ public class ErrorResponseDto {
     private LocalDateTime timestamp;
     private List<FieldErrorDto> fieldErrors;
 
-    public ErrorResponseDto(int status, String error, String code, String message, String path) {
+
+    public ErrorResponseDto(int status, String error, String code, String message, String path, LocalDateTime timestamp) {
         this.status = status;
         this.error = error;
         this.code = code;
         this.message = message;
-        this.path = LocalDateTime.now().toString();
+        this.path = path;
+        this.timestamp = timestamp;
     }
 
-    public ErrorResponseDto(int status, String error, String code, String message, String path, List<FieldErrorDto> fieldErrors) {
-        this(status, error, code, message, path);
+    public ErrorResponseDto(int status, String error, String code, String message, String path, LocalDateTime timestamp, List<FieldErrorDto> fieldErrors) {
+        this(status, error, code, message, path, timestamp);
         this.fieldErrors = fieldErrors;
     }
 
+    // Getters
     public int getStatus() { return status; }
     public String getError() { return error; }
     public String getCode() { return code; }
