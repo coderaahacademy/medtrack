@@ -50,6 +50,21 @@ public class GlobalExceptionHandler {
     }
 
 
+    @ExceptionHandler(InvalidStatusTransitionException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidStatusTransition(InvalidStatusTransitionException ex) {
+        return buildResponse(
+                HttpStatus.CONFLICT,
+                ex.getMessage() != null ? ex.getMessage() : "Invalid state transition"
+        );
+    }
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleUnexpectedException(Exception ex) {
+        return buildResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "An unexpected internal server error occurred."
+        );
+    }
+
     private ResponseEntity<ErrorResponse> buildResponse(HttpStatus status, String message) {
 
         ErrorResponse response = new ErrorResponse(
