@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.converter.HttpMessageNotReadableException;
-
+import java.util.Collections;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -63,7 +63,7 @@ public class GlobalExceptionHandler {
                 "Required request body is missing or invalid JSON format",
                 request.getRequestURI(),
                 LocalDateTime.now(),
-                null
+                Collections.emptyList()
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
