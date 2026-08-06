@@ -54,8 +54,7 @@ public class PrescriptionController {
             @Valid @RequestBody PrescriptionStatusUpdateRequest request) {
 
         return ResponseEntity.ok(
-                prescriptionService.updateStatus(id, request.getStatus(), request.getReason()
-                )
+                prescriptionService.updateStatus(id, request.getStatus())
         );
     }
     @PatchMapping("/{id}/cancel")
@@ -63,9 +62,8 @@ public class PrescriptionController {
             @PathVariable Long id,
             @Valid @RequestBody CancelPrescriptionRequest request) {
         return ResponseEntity.ok(
-                prescriptionService.updateStatus(
+                prescriptionService.cancelPrescription(
                         id,
-                        PrescriptionStatus.CANCELLED,
                         request.getReason()
                 )
         );

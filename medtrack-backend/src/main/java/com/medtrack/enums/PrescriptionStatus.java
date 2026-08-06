@@ -7,7 +7,7 @@ public enum PrescriptionStatus {
     PARTIALLY_FULFILLED,
     COMPLETED,
     CANCELLED,
-    REVOKED
+
 
 
 }
