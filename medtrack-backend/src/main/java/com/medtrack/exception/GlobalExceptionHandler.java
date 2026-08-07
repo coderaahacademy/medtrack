@@ -31,14 +31,30 @@ public class GlobalExceptionHandler {
             ResponseStatusException ex, HttpServletRequest request) {
 
         HttpStatus status = HttpStatus.valueOf(ex.getStatusCode().value());
-        String code = status == HttpStatus.NOT_FOUND ? "RESOURCE_NOT_FOUND"
-                : status == HttpStatus.CONFLICT ? "CONFLICT"
-                  : "ERROR";
+        String code = switch (status) {
+            case NOT_FOUND -> "RESOURCE_NOT_FOUND";
+            case CONFLICT -> "CONFLICT";
+            case BAD_REQUEST -> "BAD_REQUEST";
+            case UNPROCESSABLE_ENTITY -> "UNPROCESSABLE_ENTITY";
+            default -> status.name();
+        };
 
         return buildResponse(
                 status,
                 code,
                 ex.getReason(),
+                request,
+                Collections.emptyList()
+        );
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponseDto> handleResourceNotFound(
+            ResourceNotFoundException ex, HttpServletRequest request) {
+        return buildResponse(
+                HttpStatus.NOT_FOUND,
+                "RESOURCE_NOT_FOUND",
+                ex.getMessage(),
                 request,
                 Collections.emptyList()
         );

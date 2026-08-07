@@ -32,3 +32,4 @@ build/
 ### VS Code ###
 .vscode/
 /medtrack/
+.DS_Store
