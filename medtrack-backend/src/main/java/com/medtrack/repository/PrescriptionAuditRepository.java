@@ -7,5 +7,5 @@ import java.util.List;
 
 @Repository
 public interface PrescriptionAuditRepository extends JpaRepository<PrescriptionAudit, Long> {
-    List<PrescriptionAudit> findByPrescriptionIdOrderByEventTimestampAsc(Long prescriptionId);
+    List<PrescriptionAudit> findByPrescription_IdOrderByEventTimestampAsc(Long prescriptionId);
 }

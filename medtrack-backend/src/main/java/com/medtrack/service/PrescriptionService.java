@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class PrescriptionService {
-    private final PrescriptionAuditHistoryService auditHistoryService;
+    private final PrescriptionAuditService auditService;
     private final PrescriptionRepository prescriptionRepository;
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
@@ -30,13 +30,13 @@ public class PrescriptionService {
                                DoctorRepository doctorRepository,
                                VisitRepository visitRepository,
                                MedicationRepository medicationRepository,
-                               PrescriptionAuditHistoryService auditHistoryService) {
+                               PrescriptionAuditService auditService) {
         this.prescriptionRepository = prescriptionRepository;
         this.patientRepository = patientRepository;
         this.doctorRepository = doctorRepository;
         this.visitRepository = visitRepository;
         this.medicationRepository = medicationRepository;
-        this.auditHistoryService = auditHistoryService;
+        this.auditService = auditService;
     }
 
     @Transactional
@@ -61,9 +61,7 @@ public class PrescriptionService {
         prescription.setNotes(request.getNotes());
         request.getItems().forEach(itemRequest -> {
             Long medicationId = itemRequest.getMedicationId();
-
             Medication medication = medicationRepository.findByIdOrThrow(medicationId);
-
             PrescriptionItem item = new PrescriptionItem();
             item.setMedication(medication);
             item.setDosage(itemRequest.getDosage());
@@ -74,12 +72,79 @@ public class PrescriptionService {
             prescription.addItem(item);
         });
         Prescription saved = prescriptionRepository.saveAndFlush(prescription);
-        auditHistoryService.recordAudit(saved.getId(), null, saved.getStatus(), "Prescription created");
-        return toResponse(saved);    }
+        auditService.recordEvent(saved.getId(), null, saved.getStatus(), "SYSTEM", "Prescription created");
+        return toResponse(saved);
+    }
 
     @Transactional(readOnly = true)
     public Page<PrescriptionResponse> getPrescriptions(Long patientId, Pageable pageable) {
         return prescriptionRepository.findByPatientId(patientId, pageable).map(this::toResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<PrescriptionResponse> getAllPrescriptions(Pageable pageable) {
+        Page<Prescription> prescriptions = prescriptionRepository.findAll(pageable);
+        return prescriptions.map(this::toResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public PrescriptionResponse getById(Long id) {
+        return toResponse(prescriptionRepository.findByIdOrThrow(id));
+    }
+
+    @Transactional(readOnly = true)
+    public Page<PrescriptionResponse> getPatientPrescriptions(Long patientId, PrescriptionStatus status, Pageable pageable) {
+        if (!patientRepository.existsById(patientId)) {
+            throw new ResourceNotFoundException("Patient not found with id: " + patientId);
+        }
+        Page<Prescription> prescriptions;
+        if (status != null) {
+            prescriptions = prescriptionRepository.findAllByPatientIdAndStatus(patientId, status, pageable);
+        } else {
+            prescriptions = prescriptionRepository.findAllByPatientId(patientId, pageable);
+        }
+        return prescriptions.map(this::toResponse);
+    }
+
+    @Transactional
+    public PrescriptionResponse updateStatus(Long id, PrescriptionStatus newStatus) {
+        Prescription prescription = prescriptionRepository.findByIdOrThrow(id);
+        validateStatusTransition(prescription.getStatus(), newStatus);
+        PrescriptionStatus oldStatus = prescription.getStatus();
+        prescription.setStatus(newStatus);
+        Prescription saved = prescriptionRepository.save(prescription);
+        auditService.recordEvent(saved.getId(), oldStatus, newStatus, "SYSTEM", "Status updated");
+        return toResponse(saved);
+    }
+
+    private void validateStatusTransition(PrescriptionStatus currentStatus, PrescriptionStatus newStatus) {
+        if (currentStatus == PrescriptionStatus.COMPLETED ||
+                currentStatus == PrescriptionStatus.CANCELLED) {
+            throw new InvalidStatusTransitionException("Cannot change status from " + currentStatus);
+        }
+        switch (currentStatus) {
+            case ISSUED:
+                if (newStatus != PrescriptionStatus.SENT_TO_PHARMACY &&
+                        newStatus != PrescriptionStatus.CANCELLED) {
+                    throw new InvalidStatusTransitionException("Invalid transition from ISSUED to " + newStatus);
+                }
+                break;
+            case SENT_TO_PHARMACY:
+                if (newStatus != PrescriptionStatus.PARTIALLY_FULFILLED &&
+                        newStatus != PrescriptionStatus.CANCELLED &&
+                        newStatus != PrescriptionStatus.COMPLETED) {
+                    throw new InvalidStatusTransitionException("Invalid transition from SENT_TO_PHARMACY to " + newStatus);
+                }
+                break;
+            case PARTIALLY_FULFILLED:
+                if (newStatus != PrescriptionStatus.COMPLETED &&
+                        newStatus != PrescriptionStatus.CANCELLED) {
+                    throw new InvalidStatusTransitionException("Invalid transition from PARTIALLY_FULFILLED to " + newStatus);
+                }
+                break;
+            default:
+                throw new InvalidStatusTransitionException("Unsupported transition from " + currentStatus);
+        }
     }
 
     private PrescriptionResponse toResponse(Prescription prescription) {
@@ -112,103 +177,5 @@ public class PrescriptionService {
         response.setCreatedAt(prescriptionItem.getCreatedAt());
         response.setUpdatedAt(prescriptionItem.getUpdatedAt());
         return response;
-    }
-
-    @Transactional(readOnly = true)
-    public Page<PrescriptionResponse> getAllPrescriptions(Pageable pageable) {
-        Page<Prescription> prescriptions = prescriptionRepository.findAll(pageable);
-        return prescriptions.map(this::toResponse);
-    }
-
-    @Transactional(readOnly = true)
-    public PrescriptionResponse getById(Long id) {
-        return toResponse(prescriptionRepository.findByIdOrThrow(id));
-    }
-
-    @Transactional(readOnly = true)
-    public Page<PrescriptionResponse> getPatientPrescriptions(Long patientId, PrescriptionStatus status, Pageable pageable) {
-        if (!patientRepository.existsById(patientId)) {
-            throw new ResourceNotFoundException("Patient not found with id: " + patientId);
-        }
-
-        Page<Prescription> prescriptions;
-
-        if (status != null) {
-            prescriptions = prescriptionRepository.findAllByPatientIdAndStatus(patientId, status, pageable);
-        } else {
-            prescriptions = prescriptionRepository.findAllByPatientId(patientId, pageable);
-        }
-
-        return prescriptions.map(this::toResponse);
-    }
-    @Transactional
-    public PrescriptionResponse updateStatus(
-            Long id,
-            PrescriptionStatus newStatus) {
-
-        Prescription prescription =
-                prescriptionRepository.findByIdOrThrow(id);
-
-        validateStatusTransition(
-                prescription.getStatus(),
-                newStatus
-        );
-
-        PrescriptionStatus oldStatus = prescription.getStatus();
-        prescription.setStatus(newStatus);
-        Prescription saved = prescriptionRepository.save(prescription);
-        auditHistoryService.recordAudit(saved.getId(), oldStatus, newStatus, "Status updated");
-        return toResponse(saved);
-    }
-    private void validateStatusTransition(
-            PrescriptionStatus currentStatus,
-            PrescriptionStatus newStatus
-    ) {
-
-        if (currentStatus == PrescriptionStatus.COMPLETED ||
-                currentStatus == PrescriptionStatus.CANCELLED) {
-
-            throw new InvalidStatusTransitionException(
-                    "Cannot change status from " + currentStatus
-            );
-        }
-
-        switch (currentStatus) {
-
-            case ISSUED:
-                if (newStatus != PrescriptionStatus.SENT_TO_PHARMACY &&
-                        newStatus != PrescriptionStatus.CANCELLED) {
-                    throw new InvalidStatusTransitionException(
-                            "Invalid transition from ISSUED to " + newStatus
-                    );
-                }
-                break;
-
-
-            case SENT_TO_PHARMACY:
-                if (newStatus != PrescriptionStatus.PARTIALLY_FULFILLED &&
-                        newStatus != PrescriptionStatus.CANCELLED &&
-                        newStatus != PrescriptionStatus.COMPLETED) {
-                    throw new InvalidStatusTransitionException(
-                            "Invalid transition from SENT_TO_PHARMACY to " + newStatus
-                    );
-                }
-                break;
-
-
-            case PARTIALLY_FULFILLED:
-                if (newStatus != PrescriptionStatus.COMPLETED &&
-                        newStatus != PrescriptionStatus.CANCELLED) {
-                    throw new InvalidStatusTransitionException(
-                            "Invalid transition from PARTIALLY_FULFILLED to " + newStatus
-                    );
-                }
-                break;
-
-            default:
-                throw new InvalidStatusTransitionException(
-                        "Unsupported transition from " + currentStatus
-                );
-        }
     }
 }

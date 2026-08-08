@@ -1,6 +1,6 @@
 package com.medtrack.controller;
 
-import com.medtrack.entity.PrescriptionAudit;
+import com.medtrack.dto.PrescriptionAuditResponse;
 import com.medtrack.service.PrescriptionAuditService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -27,7 +27,7 @@ public class PrescriptionAuditController {
             @ApiResponse(responseCode = "200", description = "Audit history returned"),
             @ApiResponse(responseCode = "404", description = "Prescription not found")
     })
-    public ResponseEntity<List<PrescriptionAudit>> getAuditHistory(@PathVariable Long id) {
+    public ResponseEntity<List<PrescriptionAuditResponse>> getAuditHistory(@PathVariable Long id) {
         return ResponseEntity.ok(auditService.getHistory(id));
     }
 }
