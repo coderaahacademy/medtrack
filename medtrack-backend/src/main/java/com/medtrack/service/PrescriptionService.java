@@ -142,24 +142,29 @@ public class PrescriptionService {
     @Transactional
     public PrescriptionResponse updateStatus(Long id, PrescriptionStatus newStatus, String reason) {
         Prescription prescription = prescriptionRepository.findByIdOrThrow(id);
-        validateStatusTransition(prescription.getStatus(), newStatus);
 
-        if (newStatus == PrescriptionStatus.CANCELLED &&
-                (reason == null || reason.isBlank())) {
-            throw new IllegalArgumentException("Cancellation reason is required");
+        if (newStatus == PrescriptionStatus.CANCELLED) {
+            throw new InvalidCancellationException(
+                    "Use /cancel endpoint to cancel a prescription"
+            );
         }
+
+        validateStatusTransition(prescription.getStatus(), newStatus);
 
         PrescriptionStatus oldStatus = prescription.getStatus();
         prescription.setStatus(newStatus);
+
         Prescription saved = prescriptionRepository.save(prescription);
 
-        String description = (newStatus == PrescriptionStatus.CANCELLED)
-                ? reason
-                : "Status updated";
-        auditService.recordEvent(saved.getId(), oldStatus, newStatus, "SYSTEM", description);
+        auditService.recordEvent(
+                saved.getId(),
+                oldStatus,
+                newStatus,
+                "SYSTEM",
+                "Status updated"
+        );
 
         return toResponse(saved);
-
     }
 
     private PrescriptionResponse toResponse(Prescription prescription) {
@@ -200,7 +205,6 @@ public class PrescriptionService {
         response.setUpdatedAt(prescriptionItem.getUpdatedAt());
         return response;
     }
-
 
     @Transactional
     public PrescriptionResponse cancelPrescription(Long id, String reason) {
