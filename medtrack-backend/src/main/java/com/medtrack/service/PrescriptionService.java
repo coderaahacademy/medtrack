@@ -62,6 +62,18 @@ public class PrescriptionService {
 
         if (request.getVisitId() != null) {
             visit = visitRepository.findByIdOrThrow(request.getVisitId());
+
+            if (!visit.getPatient().getId().equals(patientId)) {
+                throw new IllegalArgumentException(
+                        "Visit does not belong to the specified patient."
+                );
+            }
+
+            if (!visit.getDoctor().getId().equals(doctorId)) {
+                throw new IllegalArgumentException(
+                        "Visit does not belong to the specified doctor."
+                );
+            }
         }
 
         Prescription prescription = new Prescription();
@@ -74,6 +86,12 @@ public class PrescriptionService {
         request.getItems().forEach(itemRequest -> {
             Long medicationId = itemRequest.getMedicationId();
             Medication medication = medicationRepository.findByIdOrThrow(medicationId);
+
+            if (!medication.isActive()) {
+                throw new IllegalArgumentException(
+                        "Medication is inactive."
+                );
+            }
             PrescriptionItem item = new PrescriptionItem();
             item.setMedication(medication);
             item.setDosage(itemRequest.getDosage());
@@ -81,6 +99,7 @@ public class PrescriptionService {
             item.setDurationDays(itemRequest.getDurationDays());
             item.setQuantity(itemRequest.getQuantity());
             item.setInstructions(itemRequest.getInstructions());
+
             prescription.addItem(item);
         });
         Prescription saved = prescriptionRepository.saveAndFlush(prescription);
@@ -166,7 +185,12 @@ public class PrescriptionService {
         response.setNotes(prescription.getNotes());
         response.setPatientId(prescription.getPatient().getId());
         response.setDoctorId(prescription.getDoctor().getId());
-        response.setVisitId(prescription.getVisit().getId());
+        response.setVisitId(
+                prescription.getVisit() != null
+                        ? prescription.getVisit().getId()
+                        : null
+        );
+
         List<PrescriptionItemResponse> itemResponses = prescription.getItems()
                 .stream().map(this::toItemResponse).collect(Collectors.toList());
         response.setItems(itemResponses);
