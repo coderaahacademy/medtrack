@@ -72,6 +72,19 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(InvalidCancellationException.class)
+    public ResponseEntity<ErrorResponseDto> handleInvalidCancellation(
+            InvalidCancellationException ex, HttpServletRequest request) {
+
+        return buildResponse(
+                HttpStatus.BAD_REQUEST,
+                "INVALID_CANCELLATION",
+                ex.getMessage(),
+                request,
+                Collections.emptyList()
+        );
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponseDto> handleIllegalArgument(
             IllegalArgumentException ex, HttpServletRequest request) {

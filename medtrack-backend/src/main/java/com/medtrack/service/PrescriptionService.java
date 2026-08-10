@@ -140,7 +140,7 @@ public class PrescriptionService {
     }
 
     @Transactional
-    public PrescriptionResponse updateStatus(Long id, PrescriptionStatus newStatus, String reason) {
+    public PrescriptionResponse updateStatus(Long id, PrescriptionStatus newStatus) {
         Prescription prescription = prescriptionRepository.findByIdOrThrow(id);
 
         if (newStatus == PrescriptionStatus.CANCELLED) {
@@ -210,12 +210,11 @@ public class PrescriptionService {
     public PrescriptionResponse cancelPrescription(Long id, String reason) {
         Prescription prescription = prescriptionRepository.findByIdOrThrow(id);
 
-        validateStatusTransition(prescription.getStatus(), PrescriptionStatus.CANCELLED);
-
         if (reason == null || reason.isBlank()) {
             throw new InvalidCancellationException("Cancellation reason is required");
-
         }
+
+        validateStatusTransition(prescription.getStatus(), PrescriptionStatus.CANCELLED);
 
         PrescriptionStatus oldStatus = prescription.getStatus();
 
