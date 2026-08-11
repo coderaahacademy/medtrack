@@ -4,6 +4,7 @@ import com.medtrack.dto.PrescriptionItemResponse;
 import com.medtrack.dto.PrescriptionRequest;
 import com.medtrack.dto.PrescriptionResponse;
 import com.medtrack.entity.*;
+import com.medtrack.exception.InvalidCancellationException;
 import com.medtrack.exception.ResourceNotFoundException;
 import com.medtrack.repository.*;
 import org.springframework.data.domain.Page;
@@ -16,6 +17,7 @@ import java.util.HashSet;
 import java.util.Set;
 import com.medtrack.dto.PrescriptionItemRequest;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -140,42 +142,29 @@ public class PrescriptionService {
     @Transactional
     public PrescriptionResponse updateStatus(Long id, PrescriptionStatus newStatus) {
         Prescription prescription = prescriptionRepository.findByIdOrThrow(id);
+
+        if (newStatus == PrescriptionStatus.CANCELLED) {
+            throw new InvalidStatusTransitionException(
+                    "Use /cancel endpoint to cancel a prescription"
+            );
+        }
+
         validateStatusTransition(prescription.getStatus(), newStatus);
+
         PrescriptionStatus oldStatus = prescription.getStatus();
         prescription.setStatus(newStatus);
-        Prescription saved = prescriptionRepository.save(prescription);
-        auditService.recordEvent(saved.getId(), oldStatus, newStatus, "SYSTEM", "Status updated");
-        return toResponse(saved);
-    }
 
-    private void validateStatusTransition(PrescriptionStatus currentStatus, PrescriptionStatus newStatus) {
-        if (currentStatus == PrescriptionStatus.COMPLETED ||
-                currentStatus == PrescriptionStatus.CANCELLED) {
-            throw new InvalidStatusTransitionException("Cannot change status from " + currentStatus);
-        }
-        switch (currentStatus) {
-            case ISSUED:
-                if (newStatus != PrescriptionStatus.SENT_TO_PHARMACY &&
-                        newStatus != PrescriptionStatus.CANCELLED) {
-                    throw new InvalidStatusTransitionException("Invalid transition from ISSUED to " + newStatus);
-                }
-                break;
-            case SENT_TO_PHARMACY:
-                if (newStatus != PrescriptionStatus.PARTIALLY_FULFILLED &&
-                        newStatus != PrescriptionStatus.CANCELLED &&
-                        newStatus != PrescriptionStatus.COMPLETED) {
-                    throw new InvalidStatusTransitionException("Invalid transition from SENT_TO_PHARMACY to " + newStatus);
-                }
-                break;
-            case PARTIALLY_FULFILLED:
-                if (newStatus != PrescriptionStatus.COMPLETED &&
-                        newStatus != PrescriptionStatus.CANCELLED) {
-                    throw new InvalidStatusTransitionException("Invalid transition from PARTIALLY_FULFILLED to " + newStatus);
-                }
-                break;
-            default:
-                throw new InvalidStatusTransitionException("Unsupported transition from " + currentStatus);
-        }
+        Prescription saved = prescriptionRepository.save(prescription);
+
+        auditService.recordEvent(
+                saved.getId(),
+                oldStatus,
+                newStatus,
+                "SYSTEM",
+                "Status updated"
+        );
+
+        return toResponse(saved);
     }
 
     private PrescriptionResponse toResponse(Prescription prescription) {
@@ -197,6 +186,8 @@ public class PrescriptionService {
         response.setId(prescription.getId());
         response.setCreatedAt(prescription.getCreatedAt());
         response.setUpdatedAt(prescription.getUpdatedAt());
+        response.setCancellationReason(prescription.getCancellationReason());
+        response.setCancelledAt(prescription.getCancelledAt());
         return response;
     }
 
@@ -213,5 +204,81 @@ public class PrescriptionService {
         response.setCreatedAt(prescriptionItem.getCreatedAt());
         response.setUpdatedAt(prescriptionItem.getUpdatedAt());
         return response;
+    }
+
+    @Transactional
+    public PrescriptionResponse cancelPrescription(Long id, String reason) {
+        Prescription prescription = prescriptionRepository.findByIdOrThrow(id);
+
+        if (reason == null || reason.isBlank()) {
+            throw new InvalidCancellationException("Cancellation reason is required");
+        }
+
+        validateStatusTransition(prescription.getStatus(), PrescriptionStatus.CANCELLED);
+
+        PrescriptionStatus oldStatus = prescription.getStatus();
+
+        prescription.setStatus(PrescriptionStatus.CANCELLED);
+        prescription.setCancellationReason(reason);
+        prescription.setCancelledAt(LocalDateTime.now());
+
+        Prescription saved = prescriptionRepository.save(prescription);
+
+        auditService.recordEvent(saved.getId(), oldStatus, PrescriptionStatus.CANCELLED, "SYSTEM", reason);
+
+        return toResponse(saved);
+    }
+
+
+    private void validateStatusTransition(
+            PrescriptionStatus currentStatus,
+            PrescriptionStatus newStatus
+    ) {
+
+        if (currentStatus == PrescriptionStatus.COMPLETED ||
+                currentStatus == PrescriptionStatus.CANCELLED){
+
+            throw new InvalidStatusTransitionException(
+                    "Cannot change status from " + currentStatus
+            );
+        }
+
+        switch (currentStatus) {
+
+            case ISSUED:
+                if (newStatus != PrescriptionStatus.SENT_TO_PHARMACY &&
+                        newStatus != PrescriptionStatus.CANCELLED) {
+                    throw new InvalidStatusTransitionException(
+                            "Invalid transition from ISSUED to " + newStatus
+                    );
+                }
+                break;
+
+
+            case SENT_TO_PHARMACY:
+                if (newStatus != PrescriptionStatus.PARTIALLY_FULFILLED &&
+                        newStatus != PrescriptionStatus.CANCELLED &&
+                        newStatus != PrescriptionStatus.COMPLETED) {
+                    throw new InvalidStatusTransitionException(
+                            "Invalid transition from SENT_TO_PHARMACY to " + newStatus
+                    );
+                }
+                break;
+
+
+            case PARTIALLY_FULFILLED:
+                if (newStatus != PrescriptionStatus.COMPLETED) {
+                    throw new InvalidStatusTransitionException(
+                            "Invalid transition from PARTIALLY_FULFILLED to " + newStatus
+                    );
+                }
+                break;
+
+
+            default:
+                throw new InvalidStatusTransitionException(
+                        "Unsupported transition from " + currentStatus
+                );
+        }
     }
 }

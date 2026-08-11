@@ -15,4 +15,5 @@ public class PrescriptionStatusUpdateRequest {
     public void setStatus(PrescriptionStatus status) {
         this.status = status;
     }
+
 }

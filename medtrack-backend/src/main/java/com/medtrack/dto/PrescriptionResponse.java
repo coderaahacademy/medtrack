@@ -15,6 +15,8 @@ public class PrescriptionResponse {
     private String notes;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String cancellationReason;
+    private LocalDateTime cancelledAt;
 
     public PrescriptionResponse() {}
 
@@ -57,4 +59,14 @@ public class PrescriptionResponse {
     public LocalDateTime getUpdatedAt() {return updatedAt;}
 
     public void setUpdatedAt(LocalDateTime updatedAt) {this.updatedAt = updatedAt;}
+
+    public String getCancellationReason() { return cancellationReason; }
+
+    public void setCancellationReason(String cancellationReason) { this.cancellationReason = cancellationReason; }
+
+    public LocalDateTime getCancelledAt() { return cancelledAt; }
+
+    public void setCancelledAt(LocalDateTime cancelledAt) { this.cancelledAt = cancelledAt; }
+
+
 }

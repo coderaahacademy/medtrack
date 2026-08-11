@@ -1,5 +1,6 @@
 package com.medtrack.controller;
 
+import com.medtrack.dto.CancelPrescriptionRequest;
 import com.medtrack.dto.PrescriptionRequest;
 import com.medtrack.dto.PrescriptionResponse;
 import com.medtrack.service.PrescriptionService;
@@ -14,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.medtrack.dto.PrescriptionStatusUpdateRequest;
+
 
 @RestController
 @RequestMapping("/api/prescriptions")
@@ -52,9 +54,24 @@ public class PrescriptionController {
             @Valid @RequestBody PrescriptionStatusUpdateRequest request) {
 
         return ResponseEntity.ok(
-                prescriptionService.updateStatus(
+                prescriptionService.updateStatus(id, request.getStatus())
+        );
+    }
+    @PatchMapping("/{id}/cancel")
+    @Operation(summary = "Cancel a prescription")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Prescription successfully cancelled"),
+            @ApiResponse(responseCode = "400", description = "Invalid request or missing cancellation reason"),
+            @ApiResponse(responseCode = "404", description = "Prescription not found"),
+            @ApiResponse(responseCode = "409", description = "Prescription cannot be cancelled from current state")
+    })
+    public ResponseEntity<PrescriptionResponse> cancelPrescription(
+            @PathVariable Long id,
+            @Valid @RequestBody CancelPrescriptionRequest request) {
+        return ResponseEntity.ok(
+                prescriptionService.cancelPrescription(
                         id,
-                        request.getStatus()
+                        request.getReason()
                 )
         );
     }

@@ -25,6 +25,7 @@ public class FulfillmentService {
 
     public FulfillmentResponse accept(Long id) {
         PrescriptionFulfillment fulfillment = getById(id);
+        ensurePrescriptionIsProcessable(fulfillment);
 
         if (fulfillment.getStatus() != FulfillmentStatus.PENDING) {
             throw new IllegalArgumentException("Only PENDING fulfillments can be accepted. Current status: " + fulfillment.getStatus());
@@ -40,6 +41,7 @@ public class FulfillmentService {
     public FulfillmentResponse reject(Long id, RejectFulfillmentRequest request) {
 
         PrescriptionFulfillment fulfillment = getById(id);
+        ensurePrescriptionIsProcessable(fulfillment);
         if (fulfillment.getStatus() != FulfillmentStatus.PENDING) {
             throw new IllegalArgumentException(
                     "Only PENDING fulfillments can be rejected. Current status: " + fulfillment.getStatus());
@@ -54,6 +56,7 @@ public class FulfillmentService {
     public FulfillmentResponse preparing(Long id) {
 
         PrescriptionFulfillment fulfillment = getById(id);
+        ensurePrescriptionIsProcessable(fulfillment);
 
         if (fulfillment.getStatus() != FulfillmentStatus.ACCEPTED) {
             throw new IllegalArgumentException(
@@ -68,6 +71,7 @@ public class FulfillmentService {
     public FulfillmentResponse ready(Long id) {
 
         PrescriptionFulfillment fulfillment = getById(id);
+        ensurePrescriptionIsProcessable(fulfillment);
 
         if (fulfillment.getStatus() != FulfillmentStatus.PREPARING) {
             throw new IllegalArgumentException(
@@ -84,6 +88,7 @@ public class FulfillmentService {
     public FulfillmentResponse completed(Long id) {
 
         PrescriptionFulfillment fulfillment = getById(id);
+        ensurePrescriptionIsProcessable(fulfillment);
 
         if (fulfillment.getStatus() != FulfillmentStatus.READY_FOR_PICKUP) {
             throw new IllegalArgumentException(
@@ -97,6 +102,15 @@ public class FulfillmentService {
 
         return toResponse(prescriptionFulfillmentRepository.saveAndFlush(fulfillment));
     }
+
+    private void ensurePrescriptionIsProcessable(PrescriptionFulfillment fulfillment) {
+        if (fulfillment.getPrescription().getStatus() == com.medtrack.enums.PrescriptionStatus.CANCELLED) {
+            throw new com.medtrack.exception.InvalidStatusTransitionException(
+                    "Cannot process fulfillment for a cancelled prescription"
+            );
+        }
+    }
+
     private PrescriptionFulfillment getById(Long id) {
         return prescriptionFulfillmentRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(
