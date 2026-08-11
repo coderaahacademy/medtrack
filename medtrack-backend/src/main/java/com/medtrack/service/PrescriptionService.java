@@ -144,7 +144,7 @@ public class PrescriptionService {
         Prescription prescription = prescriptionRepository.findByIdOrThrow(id);
 
         if (newStatus == PrescriptionStatus.CANCELLED) {
-            throw new InvalidCancellationException(
+            throw new InvalidStatusTransitionException(
                     "Use /cancel endpoint to cancel a prescription"
             );
         }

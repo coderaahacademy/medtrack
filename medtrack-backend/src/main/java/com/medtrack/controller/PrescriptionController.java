@@ -58,6 +58,13 @@ public class PrescriptionController {
         );
     }
     @PatchMapping("/{id}/cancel")
+    @Operation(summary = "Cancel a prescription")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Prescription successfully cancelled"),
+            @ApiResponse(responseCode = "400", description = "Invalid request or missing cancellation reason"),
+            @ApiResponse(responseCode = "404", description = "Prescription not found"),
+            @ApiResponse(responseCode = "409", description = "Prescription cannot be cancelled from current state")
+    })
     public ResponseEntity<PrescriptionResponse> cancelPrescription(
             @PathVariable Long id,
             @Valid @RequestBody CancelPrescriptionRequest request) {

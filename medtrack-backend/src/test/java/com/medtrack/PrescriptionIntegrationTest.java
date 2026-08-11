@@ -21,8 +21,23 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doThrow;
 
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 @SpringBootTest
+@AutoConfigureMockMvc
 public class PrescriptionIntegrationTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
     @Autowired
     private PrescriptionService prescriptionService;
@@ -155,5 +170,70 @@ public class PrescriptionIntegrationTest {
         
         Prescription saved = prescriptionRepository.findById(response.getId()).orElseThrow();
         assertEquals(PrescriptionStatus.ISSUED, saved.getStatus());
+    }
+
+    @Test
+    void shouldRollbackCancellationWhenAuditFails() {
+        // Arrange
+        Prescription prescription = new Prescription();
+        prescription.setPatient(patientRepository.findById(patientId).get());
+        prescription.setDoctor(doctorRepository.findById(doctorId).get());
+        prescription.setStatus(PrescriptionStatus.ISSUED);
+        prescription.setIssueDate(LocalDateTime.now());
+        prescription = prescriptionRepository.saveAndFlush(prescription);
+        Long id = prescription.getId();
+
+        // Mock auditService to throw exception
+        doThrow(new RuntimeException("Audit failed during cancellation"))
+                .when(auditService).recordEvent(eq(id), any(), any(), anyString(), anyString());
+
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> prescriptionService.cancelPrescription(id, "Cancel me"));
+
+        // Verify rollback
+        Prescription notCancelled = prescriptionRepository.findById(id).orElseThrow();
+        assertEquals(PrescriptionStatus.ISSUED, notCancelled.getStatus());
+        assertNull(notCancelled.getCancellationReason());
+        assertNull(notCancelled.getCancelledAt());
+        assertEquals(0, auditRepository.count(), "Audit should not be persisted");
+    }
+
+    @Test
+    void shouldReturn200OnSuccessfulCancellationApi() throws Exception {
+        Prescription prescription = new Prescription();
+        prescription.setPatient(patientRepository.findById(patientId).get());
+        prescription.setDoctor(doctorRepository.findById(doctorId).get());
+        prescription.setStatus(PrescriptionStatus.ISSUED);
+        prescription.setIssueDate(LocalDateTime.now());
+        prescription = prescriptionRepository.saveAndFlush(prescription);
+
+        com.medtrack.dto.CancelPrescriptionRequest request = new com.medtrack.dto.CancelPrescriptionRequest();
+        request.setReason("Patient requested cancellation");
+
+        mockMvc.perform(patch("/api/prescriptions/" + prescription.getId() + "/cancel")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELLED"))
+                .andExpect(jsonPath("$.cancellationReason").value("Patient requested cancellation"));
+    }
+
+    @Test
+    void shouldReturn409ForInvalidStatusTransitionApi() throws Exception {
+        Prescription prescription = new Prescription();
+        prescription.setPatient(patientRepository.findById(patientId).get());
+        prescription.setDoctor(doctorRepository.findById(doctorId).get());
+        prescription.setStatus(PrescriptionStatus.COMPLETED);
+        prescription.setIssueDate(LocalDateTime.now());
+        prescription = prescriptionRepository.saveAndFlush(prescription);
+
+        com.medtrack.dto.CancelPrescriptionRequest request = new com.medtrack.dto.CancelPrescriptionRequest();
+        request.setReason("Cancel me");
+
+        mockMvc.perform(patch("/api/prescriptions/" + prescription.getId() + "/cancel")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("INVALID_STATE_TRANSITION"));
     }
 }
