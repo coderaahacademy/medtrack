@@ -3,6 +3,10 @@ package com.medtrack.controller;
 import com.medtrack.dto.PrescriptionRequest;
 import com.medtrack.dto.PrescriptionResponse;
 import com.medtrack.service.PrescriptionService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +17,7 @@ import com.medtrack.dto.PrescriptionStatusUpdateRequest;
 
 @RestController
 @RequestMapping("/api/prescriptions")
+@Tag(name = "Prescriptions", description = "Prescription management endpoints")
 public class PrescriptionController {
     private final PrescriptionService prescriptionService;
 
@@ -21,6 +26,12 @@ public class PrescriptionController {
     }
 
     @PostMapping
+    @Operation(summary = "Create a new prescription")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Prescription successfully created"),
+            @ApiResponse(responseCode = "400", description = "Invalid input, duplicate medications, or empty medication list"),
+            @ApiResponse(responseCode = "404", description = "Referenced patient, doctor, or medication not found")
+    })
     public ResponseEntity<PrescriptionResponse> create(@Valid @RequestBody PrescriptionRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(prescriptionService.create(request));
     }
