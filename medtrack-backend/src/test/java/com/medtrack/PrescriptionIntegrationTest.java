@@ -63,6 +63,15 @@ public class PrescriptionIntegrationTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private PharmacyRepository pharmacyRepository;
+
+    @Autowired
+    private PrescriptionFulfillmentRepository fulfillmentRepository;
+
+    @Autowired
+    private com.medtrack.service.PrescriptionSubmissionService submissionService;
+
     @SpyBean
     private PrescriptionAuditService auditService;
 
@@ -73,11 +82,14 @@ public class PrescriptionIntegrationTest {
     @BeforeEach
     void setUp() {
         auditRepository.deleteAll();
+        fulfillmentRepository.deleteAll();
+        itemRepository.deleteAll();
         prescriptionRepository.deleteAll();
         medicationRepository.deleteAll();
         doctorRepository.deleteAll();
         patientRepository.deleteAll();
         userRepository.deleteAll();
+        pharmacyRepository.deleteAll();
 
         User user1 = new User();
         user1.setEmail("patient@example.com");
@@ -235,5 +247,63 @@ public class PrescriptionIntegrationTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("INVALID_STATE_TRANSITION"));
+    }
+
+    @Test
+    void shouldRollbackSubmissionWhenAuditFails() {
+        // Arrange
+        Pharmacy pharmacy = new Pharmacy();
+        pharmacy.setName("Test Pharmacy");
+        pharmacy.setActive(true);
+        pharmacy = pharmacyRepository.save(pharmacy);
+        Long pId = pharmacy.getId();
+
+        Prescription prescription = new Prescription();
+        prescription.setPatient(patientRepository.findById(patientId).get());
+        prescription.setDoctor(doctorRepository.findById(doctorId).get());
+        prescription.setStatus(PrescriptionStatus.ISSUED);
+        prescription.setIssueDate(LocalDateTime.now());
+        prescription = prescriptionRepository.saveAndFlush(prescription);
+        Long id = prescription.getId();
+
+        // Mock auditService to throw exception
+        doThrow(new RuntimeException("Audit failed during submission"))
+                .when(auditService).recordEvent(eq(id), any(), any(), anyString(), anyString());
+
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> submissionService.sendToPharmacy(id, pId));
+
+        // Verify rollback
+        Prescription notSent = prescriptionRepository.findById(id).orElseThrow();
+        assertEquals(PrescriptionStatus.ISSUED, notSent.getStatus());
+        assertEquals(0, fulfillmentRepository.count(), "Fulfillment should not be persisted");
+        assertEquals(0, auditRepository.count(), "Audit should not be persisted");
+    }
+
+    @Test
+    void shouldSucceedSubmissionAndPersistEverything() {
+        // Arrange
+        Pharmacy pharmacy = new Pharmacy();
+        pharmacy.setName("Test Pharmacy");
+        pharmacy.setActive(true);
+        pharmacy = pharmacyRepository.save(pharmacy);
+        Long pId = pharmacy.getId();
+
+        Prescription prescription = new Prescription();
+        prescription.setPatient(patientRepository.findById(patientId).get());
+        prescription.setDoctor(doctorRepository.findById(doctorId).get());
+        prescription.setStatus(PrescriptionStatus.ISSUED);
+        prescription.setIssueDate(LocalDateTime.now());
+        prescription = prescriptionRepository.saveAndFlush(prescription);
+        Long id = prescription.getId();
+
+        // Act
+        submissionService.sendToPharmacy(id, pId);
+
+        // Assert
+        Prescription sent = prescriptionRepository.findById(id).orElseThrow();
+        assertEquals(PrescriptionStatus.SENT_TO_PHARMACY, sent.getStatus());
+        assertEquals(1, fulfillmentRepository.count());
+        assertEquals(1, auditRepository.count());
     }
 }

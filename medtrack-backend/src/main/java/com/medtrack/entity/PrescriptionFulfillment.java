@@ -13,7 +13,7 @@ public class PrescriptionFulfillment {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "prescription_id", nullable = false)
+    @JoinColumn(name = "prescription_id", nullable = false, unique = true)
     private Prescription prescription;
 
     @ManyToOne(fetch = FetchType.LAZY)
