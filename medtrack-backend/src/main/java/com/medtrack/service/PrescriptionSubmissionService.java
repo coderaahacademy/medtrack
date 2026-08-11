@@ -22,15 +22,18 @@ public class PrescriptionSubmissionService {
     private final PrescriptionRepository prescriptionRepository;
     private final PharmacyRepository pharmacyRepository;
     private final PrescriptionFulfillmentRepository fulfillmentRepository;
+    private final PrescriptionAuditService auditService;
 
     public PrescriptionSubmissionService(
             PrescriptionRepository prescriptionRepository,
             PharmacyRepository pharmacyRepository,
-            PrescriptionFulfillmentRepository fulfillmentRepository
+            PrescriptionFulfillmentRepository fulfillmentRepository,
+            PrescriptionAuditService auditService
     ) {
         this.prescriptionRepository = prescriptionRepository;
         this.pharmacyRepository = pharmacyRepository;
         this.fulfillmentRepository = fulfillmentRepository;
+        this.auditService = auditService;
     }
 
     @Transactional
@@ -50,6 +53,10 @@ public class PrescriptionSubmissionService {
                         "Pharmacy not found with id: " + pharmacyId
                 ));
 
+        if (!pharmacy.isActive()) {
+            throw new IllegalArgumentException("Cannot send prescription to an inactive pharmacy");
+        }
+
         if (fulfillmentRepository.existsByPrescriptionId(prescriptionId)) {
             throw new InvalidStatusTransitionException(
                     "Prescription has already been sent to a pharmacy"
@@ -62,6 +69,7 @@ public class PrescriptionSubmissionService {
             );
         }
 
+        PrescriptionStatus oldStatus = prescription.getStatus();
         LocalDateTime requestedAt = LocalDateTime.now();
 
         PrescriptionFulfillment fulfillment =
@@ -80,6 +88,14 @@ public class PrescriptionSubmissionService {
 
         PrescriptionFulfillment savedFulfillment =
                 fulfillmentRepository.save(fulfillment);
+
+        auditService.recordEvent(
+                prescription.getId(),
+                oldStatus,
+                PrescriptionStatus.SENT_TO_PHARMACY,
+                "SYSTEM",
+                "Prescription sent to pharmacy " + pharmacy.getId()
+        );
 
         return toResponse(
                 savedFulfillment,

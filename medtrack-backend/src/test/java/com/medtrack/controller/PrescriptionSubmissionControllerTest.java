@@ -90,10 +90,9 @@ class PrescriptionSubmissionControllerTest {
                                 .content("{}")
                 )
                 .andExpect(status().isBadRequest())
-                .andExpect(
-                        jsonPath("$.pharmacyId")
-                                .value("Pharmacy ID is required")
-                );
+                .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"))
+                .andExpect(jsonPath("$.fieldErrors[0].field").value("pharmacyId"))
+                .andExpect(jsonPath("$.fieldErrors[0].message").value("Pharmacy ID is required"));
     }
 
     @Test
@@ -111,10 +110,9 @@ class PrescriptionSubmissionControllerTest {
                                         """)
                 )
                 .andExpect(status().isBadRequest())
-                .andExpect(
-                        jsonPath("$.pharmacyId")
-                                .value("Pharmacy ID must be a valid number")
-                );
+                .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"))
+                .andExpect(jsonPath("$.fieldErrors[0].field").value("pharmacyId"))
+                .andExpect(jsonPath("$.fieldErrors[0].message").value("Pharmacy ID must be a valid number"));
     }
 
     @Test
@@ -139,6 +137,7 @@ class PrescriptionSubmissionControllerTest {
                                         """)
                 )
                 .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("RESOURCE_NOT_FOUND"))
                 .andExpect(
                         jsonPath("$.message")
                                 .value("Prescription not found with id: 99")
@@ -166,6 +165,7 @@ class PrescriptionSubmissionControllerTest {
                                         }
                                         """)
                 )
-                .andExpect(status().isConflict());
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("INVALID_STATE_TRANSITION"));
     }
 }

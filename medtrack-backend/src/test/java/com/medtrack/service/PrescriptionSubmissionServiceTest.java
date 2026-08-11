@@ -36,6 +36,9 @@ class PrescriptionSubmissionServiceTest {
     @Mock
     private PrescriptionFulfillmentRepository fulfillmentRepository;
 
+    @Mock
+    private PrescriptionAuditService auditService;
+
     @InjectMocks
     private PrescriptionSubmissionService submissionService;
 
@@ -105,6 +108,14 @@ class PrescriptionSubmissionServiceTest {
         assertNotNull(response.getRequestedAt());
 
         verify(prescriptionRepository).save(prescription);
+
+        verify(auditService).recordEvent(
+                eq(1L),
+                eq(PrescriptionStatus.ISSUED),
+                eq(PrescriptionStatus.SENT_TO_PHARMACY),
+                eq("SYSTEM"),
+                contains("Prescription sent to pharmacy 2")
+        );
 
         ArgumentCaptor<PrescriptionFulfillment> captor =
                 ArgumentCaptor.forClass(
@@ -204,11 +215,12 @@ class PrescriptionSubmissionServiceTest {
     }
 
     @Test
-    void shouldRejectPrescriptionWhenStatusIsNotIssued() {
+    void shouldRejectInactivePharmacy() {
         Prescription prescription =
-                createPrescription(PrescriptionStatus.COMPLETED);
+                createPrescription(PrescriptionStatus.ISSUED);
 
         Pharmacy pharmacy = createPharmacy();
+        pharmacy.setActive(false);
 
         when(prescriptionRepository.findByIdForUpdate(1L))
                 .thenReturn(Optional.of(prescription));
@@ -216,23 +228,38 @@ class PrescriptionSubmissionServiceTest {
         when(pharmacyRepository.findById(2L))
                 .thenReturn(Optional.of(pharmacy));
 
-        when(fulfillmentRepository.existsByPrescriptionId(1L))
-                .thenReturn(false);
-
-        assertThrows(
-                InvalidStatusTransitionException.class,
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
                 () -> submissionService.sendToPharmacy(1L, 2L)
         );
 
-        assertEquals(
-                PrescriptionStatus.COMPLETED,
-                prescription.getStatus()
-        );
+        assertEquals("Cannot send prescription to an inactive pharmacy", exception.getMessage());
 
-        verify(prescriptionRepository, never())
-                .save(any(Prescription.class));
+        verifyNoInteractions(fulfillmentRepository, auditService);
+        verify(prescriptionRepository, never()).save(any(Prescription.class));
+    }
 
-        verify(fulfillmentRepository, never())
-                .save(any(PrescriptionFulfillment.class));
+    @Test
+    void shouldRejectAlreadySentPrescription() {
+        Prescription prescription = createPrescription(PrescriptionStatus.SENT_TO_PHARMACY);
+        Pharmacy pharmacy = createPharmacy();
+
+        when(prescriptionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(prescription));
+        when(pharmacyRepository.findById(2L)).thenReturn(Optional.of(pharmacy));
+        when(fulfillmentRepository.existsByPrescriptionId(1L)).thenReturn(false);
+
+        assertThrows(InvalidStatusTransitionException.class, () -> submissionService.sendToPharmacy(1L, 2L));
+    }
+
+    @Test
+    void shouldRejectCancelledPrescription() {
+        Prescription prescription = createPrescription(PrescriptionStatus.CANCELLED);
+        Pharmacy pharmacy = createPharmacy();
+
+        when(prescriptionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(prescription));
+        when(pharmacyRepository.findById(2L)).thenReturn(Optional.of(pharmacy));
+        when(fulfillmentRepository.existsByPrescriptionId(1L)).thenReturn(false);
+
+        assertThrows(InvalidStatusTransitionException.class, () -> submissionService.sendToPharmacy(1L, 2L));
     }
 }
