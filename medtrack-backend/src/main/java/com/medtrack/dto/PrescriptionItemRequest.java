@@ -1,5 +1,6 @@
 package com.medtrack.dto;
 
+import com.medtrack.validation.ValidDosage;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -11,6 +12,7 @@ public class PrescriptionItemRequest {
     @Positive(message = "Medication ID must be a positive number")
     private Long medicationId;
     @NotBlank(message = "Dosage is required (e.g., 500mg)")
+    @ValidDosage
     private String dosage;
     @NotBlank(message = "Frequency is required (e.g., Twice a day)")
     private String frequency;

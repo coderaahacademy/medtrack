@@ -1,6 +1,5 @@
 package com.medtrack.dto;
 
-import com.medtrack.enums.PrescriptionStatus;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -23,8 +22,6 @@ public class PrescriptionRequest {
     @NotEmpty(message = "A prescription must contain at least one medication item")
     @Valid
     private List<PrescriptionItemRequest> items;
-    @NotNull(message = "Prescription status is required")
-    private PrescriptionStatus status;
     @NotNull(message = "Issue date is required")
     @PastOrPresent(message = "Issue date cannot be in the future")
     private LocalDateTime issueDate;
@@ -47,10 +44,6 @@ public class PrescriptionRequest {
     public List<PrescriptionItemRequest> getItems() {return items;}
 
     public void setItems(List<PrescriptionItemRequest> items) {this.items = items;}
-
-    public PrescriptionStatus getStatus() {return status;}
-
-    public void setStatus(PrescriptionStatus status) {this.status = status;}
 
     public LocalDateTime getIssueDate() {return issueDate;}
 

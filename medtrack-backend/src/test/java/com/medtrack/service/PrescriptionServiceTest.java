@@ -7,6 +7,7 @@ import com.medtrack.entity.Visit;
 import com.medtrack.enums.PrescriptionStatus;
 import com.medtrack.exception.InvalidStatusTransitionException;
 import com.medtrack.repository.*;
+import com.medtrack.service.PrescriptionAuditService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -35,6 +36,9 @@ class PrescriptionServiceTest {
 
     @Mock
     private MedicationRepository medicationRepository;
+
+    @Mock
+    private PrescriptionAuditService auditService;
 
     @InjectMocks
     private PrescriptionService prescriptionService;

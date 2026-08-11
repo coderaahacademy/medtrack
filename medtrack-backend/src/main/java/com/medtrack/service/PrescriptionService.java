@@ -12,6 +12,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.medtrack.enums.PrescriptionStatus;
 import com.medtrack.exception.InvalidStatusTransitionException;
+import java.util.HashSet;
+import java.util.Set;
+import com.medtrack.dto.PrescriptionItemRequest;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,6 +44,15 @@ public class PrescriptionService {
 
     @Transactional
     public PrescriptionResponse create(PrescriptionRequest request) {
+        Set<Long> medicationIds = new HashSet<>();
+
+        for (PrescriptionItemRequest item : request.getItems()) {
+            if (!medicationIds.add(item.getMedicationId())) {
+                throw new IllegalArgumentException(
+                        "Duplicate medications are not allowed."
+                );
+            }
+        }
         Long patientId = request.getPatientId();
         Long doctorId = request.getDoctorId();
 
@@ -50,6 +62,18 @@ public class PrescriptionService {
 
         if (request.getVisitId() != null) {
             visit = visitRepository.findByIdOrThrow(request.getVisitId());
+
+            if (!visit.getPatient().getId().equals(patientId)) {
+                throw new IllegalArgumentException(
+                        "Visit does not belong to the specified patient."
+                );
+            }
+
+            if (!visit.getDoctor().getId().equals(doctorId)) {
+                throw new IllegalArgumentException(
+                        "Visit does not belong to the specified doctor."
+                );
+            }
         }
 
         Prescription prescription = new Prescription();
@@ -62,6 +86,12 @@ public class PrescriptionService {
         request.getItems().forEach(itemRequest -> {
             Long medicationId = itemRequest.getMedicationId();
             Medication medication = medicationRepository.findByIdOrThrow(medicationId);
+
+            if (!medication.isActive()) {
+                throw new IllegalArgumentException(
+                        "Medication is inactive."
+                );
+            }
             PrescriptionItem item = new PrescriptionItem();
             item.setMedication(medication);
             item.setDosage(itemRequest.getDosage());
@@ -69,6 +99,7 @@ public class PrescriptionService {
             item.setDurationDays(itemRequest.getDurationDays());
             item.setQuantity(itemRequest.getQuantity());
             item.setInstructions(itemRequest.getInstructions());
+
             prescription.addItem(item);
         });
         Prescription saved = prescriptionRepository.saveAndFlush(prescription);
@@ -154,7 +185,12 @@ public class PrescriptionService {
         response.setNotes(prescription.getNotes());
         response.setPatientId(prescription.getPatient().getId());
         response.setDoctorId(prescription.getDoctor().getId());
-        response.setVisitId(prescription.getVisit().getId());
+        response.setVisitId(
+                prescription.getVisit() != null
+                        ? prescription.getVisit().getId()
+                        : null
+        );
+
         List<PrescriptionItemResponse> itemResponses = prescription.getItems()
                 .stream().map(this::toItemResponse).collect(Collectors.toList());
         response.setItems(itemResponses);
