@@ -23,17 +23,20 @@ public class PrescriptionSubmissionService {
     private final PharmacyRepository pharmacyRepository;
     private final PrescriptionFulfillmentRepository fulfillmentRepository;
     private final PrescriptionAuditService auditService;
+    private final PrescriptionStatusTransitionService statusTransitionService;
 
     public PrescriptionSubmissionService(
             PrescriptionRepository prescriptionRepository,
             PharmacyRepository pharmacyRepository,
             PrescriptionFulfillmentRepository fulfillmentRepository,
-            PrescriptionAuditService auditService
+            PrescriptionAuditService auditService,
+            PrescriptionStatusTransitionService statusTransitionService
     ) {
         this.prescriptionRepository = prescriptionRepository;
         this.pharmacyRepository = pharmacyRepository;
         this.fulfillmentRepository = fulfillmentRepository;
         this.auditService = auditService;
+        this.statusTransitionService = statusTransitionService;
     }
 
     @Transactional
@@ -63,11 +66,10 @@ public class PrescriptionSubmissionService {
             );
         }
 
-        if (prescription.getStatus() != PrescriptionStatus.ISSUED) {
-            throw new InvalidStatusTransitionException(
-                    "Prescription can only be sent when its status is ISSUED"
-            );
-        }
+        statusTransitionService.validate(
+                prescription.getStatus(),
+                PrescriptionStatus.SENT_TO_PHARMACY
+        );
 
         PrescriptionStatus oldStatus = prescription.getStatus();
         LocalDateTime requestedAt = LocalDateTime.now();

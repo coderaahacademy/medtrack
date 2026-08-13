@@ -39,6 +39,9 @@ class PrescriptionSubmissionServiceTest {
     @Mock
     private PrescriptionAuditService auditService;
 
+    @Mock
+    private PrescriptionStatusTransitionService statusTransitionService;
+
     @InjectMocks
     private PrescriptionSubmissionService submissionService;
 
@@ -73,6 +76,11 @@ class PrescriptionSubmissionServiceTest {
         when(fulfillmentRepository.existsByPrescriptionId(1L))
                 .thenReturn(false);
 
+        doNothing().when(statusTransitionService).validate(
+                PrescriptionStatus.ISSUED,
+                PrescriptionStatus.SENT_TO_PHARMACY
+        );
+
         when(fulfillmentRepository.save(
                 any(PrescriptionFulfillment.class)
         )).thenAnswer(invocation -> {
@@ -106,6 +114,11 @@ class PrescriptionSubmissionServiceTest {
         );
 
         assertNotNull(response.getRequestedAt());
+
+        verify(statusTransitionService).validate(
+                PrescriptionStatus.ISSUED,
+                PrescriptionStatus.SENT_TO_PHARMACY
+        );
 
         verify(prescriptionRepository).save(prescription);
 
@@ -157,7 +170,9 @@ class PrescriptionSubmissionServiceTest {
 
         verifyNoInteractions(
                 pharmacyRepository,
-                fulfillmentRepository
+                fulfillmentRepository,
+                statusTransitionService,
+                auditService
         );
 
         verify(prescriptionRepository, never())
@@ -180,7 +195,11 @@ class PrescriptionSubmissionServiceTest {
                 () -> submissionService.sendToPharmacy(1L, 99L)
         );
 
-        verifyNoInteractions(fulfillmentRepository);
+        verifyNoInteractions(
+                fulfillmentRepository,
+                statusTransitionService,
+                auditService
+        );
 
         verify(prescriptionRepository, never())
                 .save(any(Prescription.class));
@@ -207,11 +226,20 @@ class PrescriptionSubmissionServiceTest {
                 () -> submissionService.sendToPharmacy(1L, 2L)
         );
 
-        verify(prescriptionRepository, never())
-                .save(any(Prescription.class));
+        verify(
+                statusTransitionService,
+                never()
+        ).validate(any(), any());
 
-        verify(fulfillmentRepository, never())
-                .save(any(PrescriptionFulfillment.class));
+        verify(
+                prescriptionRepository,
+                never()
+        ).save(any(Prescription.class));
+
+        verify(
+                fulfillmentRepository,
+                never()
+        ).save(any(PrescriptionFulfillment.class));
     }
 
     @Test
@@ -233,33 +261,118 @@ class PrescriptionSubmissionServiceTest {
                 () -> submissionService.sendToPharmacy(1L, 2L)
         );
 
-        assertEquals("Cannot send prescription to an inactive pharmacy", exception.getMessage());
+        assertEquals(
+                "Cannot send prescription to an inactive pharmacy",
+                exception.getMessage()
+        );
 
-        verifyNoInteractions(fulfillmentRepository, auditService);
-        verify(prescriptionRepository, never()).save(any(Prescription.class));
+        verifyNoInteractions(
+                fulfillmentRepository,
+                auditService,
+                statusTransitionService
+        );
+
+        verify(
+                prescriptionRepository,
+                never()
+        ).save(any(Prescription.class));
     }
 
     @Test
     void shouldRejectAlreadySentPrescription() {
-        Prescription prescription = createPrescription(PrescriptionStatus.SENT_TO_PHARMACY);
+        Prescription prescription =
+                createPrescription(
+                        PrescriptionStatus.SENT_TO_PHARMACY
+                );
+
         Pharmacy pharmacy = createPharmacy();
 
-        when(prescriptionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(prescription));
-        when(pharmacyRepository.findById(2L)).thenReturn(Optional.of(pharmacy));
-        when(fulfillmentRepository.existsByPrescriptionId(1L)).thenReturn(false);
+        when(prescriptionRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(prescription));
 
-        assertThrows(InvalidStatusTransitionException.class, () -> submissionService.sendToPharmacy(1L, 2L));
+        when(pharmacyRepository.findById(2L))
+                .thenReturn(Optional.of(pharmacy));
+
+        when(fulfillmentRepository.existsByPrescriptionId(1L))
+                .thenReturn(false);
+
+        doThrow(
+                new InvalidStatusTransitionException(
+                        "Invalid prescription status transition"
+                )
+        ).when(statusTransitionService).validate(
+                PrescriptionStatus.SENT_TO_PHARMACY,
+                PrescriptionStatus.SENT_TO_PHARMACY
+        );
+
+        assertThrows(
+                InvalidStatusTransitionException.class,
+                () -> submissionService.sendToPharmacy(1L, 2L)
+        );
+
+        verify(statusTransitionService).validate(
+                PrescriptionStatus.SENT_TO_PHARMACY,
+                PrescriptionStatus.SENT_TO_PHARMACY
+        );
+
+        verify(
+                prescriptionRepository,
+                never()
+        ).save(any(Prescription.class));
+
+        verify(
+                fulfillmentRepository,
+                never()
+        ).save(any(PrescriptionFulfillment.class));
+
+        verifyNoInteractions(auditService);
     }
 
     @Test
     void shouldRejectCancelledPrescription() {
-        Prescription prescription = createPrescription(PrescriptionStatus.CANCELLED);
+        Prescription prescription =
+                createPrescription(PrescriptionStatus.CANCELLED);
+
         Pharmacy pharmacy = createPharmacy();
 
-        when(prescriptionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(prescription));
-        when(pharmacyRepository.findById(2L)).thenReturn(Optional.of(pharmacy));
-        when(fulfillmentRepository.existsByPrescriptionId(1L)).thenReturn(false);
+        when(prescriptionRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(prescription));
 
-        assertThrows(InvalidStatusTransitionException.class, () -> submissionService.sendToPharmacy(1L, 2L));
+        when(pharmacyRepository.findById(2L))
+                .thenReturn(Optional.of(pharmacy));
+
+        when(fulfillmentRepository.existsByPrescriptionId(1L))
+                .thenReturn(false);
+
+        doThrow(
+                new InvalidStatusTransitionException(
+                        "Invalid prescription status transition"
+                )
+        ).when(statusTransitionService).validate(
+                PrescriptionStatus.CANCELLED,
+                PrescriptionStatus.SENT_TO_PHARMACY
+        );
+
+        assertThrows(
+                InvalidStatusTransitionException.class,
+                () -> submissionService.sendToPharmacy(1L, 2L)
+        );
+
+        verify(statusTransitionService).validate(
+                PrescriptionStatus.CANCELLED,
+                PrescriptionStatus.SENT_TO_PHARMACY
+        );
+
+        verify(
+                prescriptionRepository,
+                never()
+        ).save(any(Prescription.class));
+
+        verify(
+                fulfillmentRepository,
+                never()
+        ).save(any(PrescriptionFulfillment.class));
+
+        verifyNoInteractions(auditService);
     }
 }

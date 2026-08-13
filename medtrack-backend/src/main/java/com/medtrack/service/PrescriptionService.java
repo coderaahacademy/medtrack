@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 @Service
 public class PrescriptionService {
     private final PrescriptionAuditService auditService;
+    private final PrescriptionStatusTransitionService statusTransitionService;
     private final PrescriptionRepository prescriptionRepository;
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
@@ -35,13 +36,15 @@ public class PrescriptionService {
                                DoctorRepository doctorRepository,
                                VisitRepository visitRepository,
                                MedicationRepository medicationRepository,
-                               PrescriptionAuditService auditService) {
+                               PrescriptionAuditService auditService,
+                               PrescriptionStatusTransitionService statusTransitionService) {
         this.prescriptionRepository = prescriptionRepository;
         this.patientRepository = patientRepository;
         this.doctorRepository = doctorRepository;
         this.visitRepository = visitRepository;
         this.medicationRepository = medicationRepository;
         this.auditService = auditService;
+        this.statusTransitionService = statusTransitionService;
     }
 
     @Transactional
@@ -141,7 +144,11 @@ public class PrescriptionService {
 
     @Transactional
     public PrescriptionResponse updateStatus(Long id, PrescriptionStatus newStatus) {
-        Prescription prescription = prescriptionRepository.findByIdOrThrow(id);
+        Prescription prescription = prescriptionRepository
+                .findByIdForUpdate(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Prescription not found with id: " + id
+                ));
 
         if (newStatus == PrescriptionStatus.CANCELLED) {
             throw new InvalidStatusTransitionException(
@@ -149,7 +156,10 @@ public class PrescriptionService {
             );
         }
 
-        validateStatusTransition(prescription.getStatus(), newStatus);
+        statusTransitionService.validate(
+                prescription.getStatus(),
+                newStatus
+        );
 
         PrescriptionStatus oldStatus = prescription.getStatus();
         prescription.setStatus(newStatus);
@@ -208,15 +218,22 @@ public class PrescriptionService {
 
     @Transactional
     public PrescriptionResponse cancelPrescription(Long id, String reason) {
-        Prescription prescription = prescriptionRepository.findByIdOrThrow(id);
+        Prescription prescription = prescriptionRepository
+                .findByIdForUpdate(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Prescription not found with id: " + id
+                ));
 
         if (reason == null || reason.isBlank()) {
             throw new InvalidCancellationException("Cancellation reason is required");
         }
 
-        validateStatusTransition(prescription.getStatus(), PrescriptionStatus.CANCELLED);
-
         PrescriptionStatus oldStatus = prescription.getStatus();
+
+        statusTransitionService.validate(
+                prescription.getStatus(),
+                PrescriptionStatus.CANCELLED
+        );
 
         prescription.setStatus(PrescriptionStatus.CANCELLED);
         prescription.setCancellationReason(reason);
@@ -229,56 +246,4 @@ public class PrescriptionService {
         return toResponse(saved);
     }
 
-
-    private void validateStatusTransition(
-            PrescriptionStatus currentStatus,
-            PrescriptionStatus newStatus
-    ) {
-
-        if (currentStatus == PrescriptionStatus.COMPLETED ||
-                currentStatus == PrescriptionStatus.CANCELLED){
-
-            throw new InvalidStatusTransitionException(
-                    "Cannot change status from " + currentStatus
-            );
-        }
-
-        switch (currentStatus) {
-
-            case ISSUED:
-                if (newStatus != PrescriptionStatus.SENT_TO_PHARMACY &&
-                        newStatus != PrescriptionStatus.CANCELLED) {
-                    throw new InvalidStatusTransitionException(
-                            "Invalid transition from ISSUED to " + newStatus
-                    );
-                }
-                break;
-
-
-            case SENT_TO_PHARMACY:
-                if (newStatus != PrescriptionStatus.PARTIALLY_FULFILLED &&
-                        newStatus != PrescriptionStatus.CANCELLED &&
-                        newStatus != PrescriptionStatus.COMPLETED) {
-                    throw new InvalidStatusTransitionException(
-                            "Invalid transition from SENT_TO_PHARMACY to " + newStatus
-                    );
-                }
-                break;
-
-
-            case PARTIALLY_FULFILLED:
-                if (newStatus != PrescriptionStatus.COMPLETED) {
-                    throw new InvalidStatusTransitionException(
-                            "Invalid transition from PARTIALLY_FULFILLED to " + newStatus
-                    );
-                }
-                break;
-
-
-            default:
-                throw new InvalidStatusTransitionException(
-                        "Unsupported transition from " + currentStatus
-                );
-        }
-    }
 }

@@ -306,4 +306,102 @@ public class PrescriptionIntegrationTest {
         assertEquals(1, fulfillmentRepository.count());
         assertEquals(1, auditRepository.count());
     }
+
+    @Test
+    void shouldReturn200WhenUpdatingIssuedToSentToPharmacy() throws Exception {
+        Prescription prescription = new Prescription();
+        prescription.setPatient(patientRepository.findById(patientId).orElseThrow());
+        prescription.setDoctor(doctorRepository.findById(doctorId).orElseThrow());
+        prescription.setStatus(PrescriptionStatus.ISSUED);
+        prescription.setIssueDate(LocalDateTime.now());
+
+        prescription = prescriptionRepository.saveAndFlush(prescription);
+
+        com.medtrack.dto.PrescriptionStatusUpdateRequest request =
+                new com.medtrack.dto.PrescriptionStatusUpdateRequest();
+
+        request.setStatus(PrescriptionStatus.SENT_TO_PHARMACY);
+
+        mockMvc.perform(
+                        patch("/api/prescriptions/" + prescription.getId() + "/status")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request))
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("SENT_TO_PHARMACY"));
+    }
+
+    @Test
+    void shouldReturn200WhenUpdatingSentToPharmacyToCompleted() throws Exception {
+        Prescription prescription = new Prescription();
+        prescription.setPatient(patientRepository.findById(patientId).orElseThrow());
+        prescription.setDoctor(doctorRepository.findById(doctorId).orElseThrow());
+        prescription.setStatus(PrescriptionStatus.SENT_TO_PHARMACY);
+        prescription.setIssueDate(LocalDateTime.now());
+
+        prescription = prescriptionRepository.saveAndFlush(prescription);
+
+        com.medtrack.dto.PrescriptionStatusUpdateRequest request =
+                new com.medtrack.dto.PrescriptionStatusUpdateRequest();
+
+        request.setStatus(PrescriptionStatus.COMPLETED);
+
+        mockMvc.perform(
+                        patch("/api/prescriptions/" + prescription.getId() + "/status")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request))
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("COMPLETED"));
+    }
+
+    @Test
+    void shouldReturn409WhenUpdatingCompletedToIssued() throws Exception {
+        Prescription prescription = new Prescription();
+        prescription.setPatient(patientRepository.findById(patientId).orElseThrow());
+        prescription.setDoctor(doctorRepository.findById(doctorId).orElseThrow());
+        prescription.setStatus(PrescriptionStatus.COMPLETED);
+        prescription.setIssueDate(LocalDateTime.now());
+
+        prescription = prescriptionRepository.saveAndFlush(prescription);
+
+        com.medtrack.dto.PrescriptionStatusUpdateRequest request =
+                new com.medtrack.dto.PrescriptionStatusUpdateRequest();
+
+        request.setStatus(PrescriptionStatus.ISSUED);
+
+        mockMvc.perform(
+                        patch("/api/prescriptions/" + prescription.getId() + "/status")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request))
+                )
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("INVALID_STATE_TRANSITION"));
+    }
+
+    @Test
+    void shouldReturn409WhenUpdatingToSameStatus() throws Exception {
+        Prescription prescription = new Prescription();
+        prescription.setPatient(patientRepository.findById(patientId).orElseThrow());
+        prescription.setDoctor(doctorRepository.findById(doctorId).orElseThrow());
+        prescription.setStatus(PrescriptionStatus.ISSUED);
+        prescription.setIssueDate(LocalDateTime.now());
+
+        prescription = prescriptionRepository.saveAndFlush(prescription);
+
+        com.medtrack.dto.PrescriptionStatusUpdateRequest request =
+                new com.medtrack.dto.PrescriptionStatusUpdateRequest();
+
+        request.setStatus(PrescriptionStatus.ISSUED);
+
+        mockMvc.perform(
+                        patch("/api/prescriptions/" + prescription.getId() + "/status")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request))
+                )
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("INVALID_STATE_TRANSITION"));
+    }
+
+
 }

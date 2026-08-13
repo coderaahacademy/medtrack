@@ -8,17 +8,24 @@ import com.medtrack.enums.PrescriptionStatus;
 import com.medtrack.exception.InvalidCancellationException;
 import com.medtrack.exception.InvalidStatusTransitionException;
 import com.medtrack.exception.ResourceNotFoundException;
-import com.medtrack.repository.*;
-import com.medtrack.service.PrescriptionAuditService;
+import com.medtrack.repository.DoctorRepository;
+import com.medtrack.repository.MedicationRepository;
+import com.medtrack.repository.PatientRepository;
+import com.medtrack.repository.PrescriptionRepository;
+import com.medtrack.repository.VisitRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,9 +49,11 @@ class PrescriptionServiceTest {
     @Mock
     private PrescriptionAuditService auditService;
 
+    @Spy
+    private PrescriptionStatusTransitionService statusTransitionService;
+
     @InjectMocks
     private PrescriptionService prescriptionService;
-
 
     private Prescription createPrescription(PrescriptionStatus status) {
 
@@ -65,12 +74,14 @@ class PrescriptionServiceTest {
         prescription.setVisit(visit);
         prescription.setStatus(status);
 
-        // برای جلوگیری از NullPointerException در stream()
         prescription.setItems(new ArrayList<>());
 
         return prescription;
     }
 
+    // ============================================================
+    // STATUS TRANSITION TESTS
+    // ============================================================
 
     @Test
     void shouldAllowIssuedToSentToPharmacy() {
@@ -78,18 +89,16 @@ class PrescriptionServiceTest {
         Prescription prescription =
                 createPrescription(PrescriptionStatus.ISSUED);
 
-        when(prescriptionRepository.findByIdOrThrow(1L))
-                .thenReturn(prescription);
+        when(prescriptionRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(prescription));
 
         when(prescriptionRepository.save(any(Prescription.class)))
                 .thenReturn(prescription);
-
 
         var response = prescriptionService.updateStatus(
                 1L,
                 PrescriptionStatus.SENT_TO_PHARMACY
         );
-
 
         assertEquals(
                 PrescriptionStatus.SENT_TO_PHARMACY,
@@ -97,26 +106,22 @@ class PrescriptionServiceTest {
         );
     }
 
-
     @Test
     void shouldAllowSentToPharmacyToCompleted() {
 
         Prescription prescription =
                 createPrescription(PrescriptionStatus.SENT_TO_PHARMACY);
 
-
-        when(prescriptionRepository.findByIdOrThrow(1L))
-                .thenReturn(prescription);
+        when(prescriptionRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(prescription));
 
         when(prescriptionRepository.save(any(Prescription.class)))
                 .thenReturn(prescription);
-
 
         var response = prescriptionService.updateStatus(
                 1L,
                 PrescriptionStatus.COMPLETED
         );
-
 
         assertEquals(
                 PrescriptionStatus.COMPLETED,
@@ -124,17 +129,14 @@ class PrescriptionServiceTest {
         );
     }
 
-
     @Test
     void shouldRejectCompletedToIssued() {
 
         Prescription prescription =
                 createPrescription(PrescriptionStatus.COMPLETED);
 
-
-        when(prescriptionRepository.findByIdOrThrow(1L))
-                .thenReturn(prescription);
-
+        when(prescriptionRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(prescription));
 
         assertThrows(
                 InvalidStatusTransitionException.class,
@@ -145,17 +147,14 @@ class PrescriptionServiceTest {
         );
     }
 
-
     @Test
     void shouldRejectCancelledToSentToPharmacy() {
 
         Prescription prescription =
                 createPrescription(PrescriptionStatus.CANCELLED);
 
-
-        when(prescriptionRepository.findByIdOrThrow(1L))
-                .thenReturn(prescription);
-
+        when(prescriptionRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(prescription));
 
         assertThrows(
                 InvalidStatusTransitionException.class,
@@ -166,17 +165,14 @@ class PrescriptionServiceTest {
         );
     }
 
-
     @Test
-    void shouldRejectDraftStatus() {
+    void shouldRejectIssuedToIssued() {
 
         Prescription prescription =
-                createPrescription(PrescriptionStatus.DRAFT);
+                createPrescription(PrescriptionStatus.ISSUED);
 
-
-        when(prescriptionRepository.findByIdOrThrow(1L))
-                .thenReturn(prescription);
-
+        when(prescriptionRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(prescription));
 
         assertThrows(
                 InvalidStatusTransitionException.class,
@@ -185,8 +181,135 @@ class PrescriptionServiceTest {
                         PrescriptionStatus.ISSUED
                 )
         );
+
+        verify(prescriptionRepository, never())
+                .save(any(Prescription.class));
+
+        verify(auditService, never())
+                .recordEvent(any(), any(), any(), any(), any());
     }
 
+    @Test
+    void shouldRejectSentToPharmacyToSameStatus() {
+
+        Prescription prescription =
+                createPrescription(PrescriptionStatus.SENT_TO_PHARMACY);
+
+        when(prescriptionRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(prescription));
+
+        assertThrows(
+                InvalidStatusTransitionException.class,
+                () -> prescriptionService.updateStatus(
+                        1L,
+                        PrescriptionStatus.SENT_TO_PHARMACY
+                )
+        );
+
+        verify(prescriptionRepository, never())
+                .save(any(Prescription.class));
+
+        verify(auditService, never())
+                .recordEvent(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void shouldRejectCompletedToSameStatus() {
+
+        Prescription prescription =
+                createPrescription(PrescriptionStatus.COMPLETED);
+
+        when(prescriptionRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(prescription));
+
+        assertThrows(
+                InvalidStatusTransitionException.class,
+                () -> prescriptionService.updateStatus(
+                        1L,
+                        PrescriptionStatus.COMPLETED
+                )
+        );
+
+        verify(prescriptionRepository, never())
+                .save(any(Prescription.class));
+
+        verify(auditService, never())
+                .recordEvent(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void shouldRejectCancelledToSameStatus() {
+
+        Prescription prescription =
+                createPrescription(PrescriptionStatus.CANCELLED);
+
+        when(prescriptionRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(prescription));
+
+        assertThrows(
+                InvalidStatusTransitionException.class,
+                () -> prescriptionService.updateStatus(
+                        1L,
+                        PrescriptionStatus.CANCELLED
+                )
+        );
+
+        verify(prescriptionRepository, never())
+                .save(any(Prescription.class));
+
+        verify(auditService, never())
+                .recordEvent(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void shouldAllowSentToPharmacyToPartiallyFulfilled() {
+
+        Prescription prescription =
+                createPrescription(PrescriptionStatus.SENT_TO_PHARMACY);
+
+        when(prescriptionRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(prescription));
+
+        when(prescriptionRepository.save(any(Prescription.class)))
+                .thenReturn(prescription);
+
+        var response = prescriptionService.updateStatus(
+                1L,
+                PrescriptionStatus.PARTIALLY_FULFILLED
+        );
+
+        assertEquals(
+                PrescriptionStatus.PARTIALLY_FULFILLED,
+                response.getStatus()
+        );
+    }
+
+    @Test
+    void shouldAllowPartiallyFulfilledToCompleted() {
+
+        Prescription prescription =
+                createPrescription(PrescriptionStatus.PARTIALLY_FULFILLED);
+
+        when(prescriptionRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(prescription));
+
+        when(prescriptionRepository.save(any(Prescription.class)))
+                .thenReturn(prescription);
+
+        var response = prescriptionService.updateStatus(
+                1L,
+                PrescriptionStatus.COMPLETED
+        );
+
+        assertEquals(
+                PrescriptionStatus.COMPLETED,
+                response.getStatus()
+        );
+    }
+
+    // ============================================================
+    // CANCELLATION TESTS
+    // ============================================================
 
     @Test
     void shouldSuccessfullyCancelPrescription() {
@@ -194,8 +317,8 @@ class PrescriptionServiceTest {
         Prescription prescription =
                 createPrescription(PrescriptionStatus.ISSUED);
 
-        when(prescriptionRepository.findByIdOrThrow(1L))
-                .thenReturn(prescription);
+        when(prescriptionRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(prescription));
 
         when(prescriptionRepository.save(any(Prescription.class)))
                 .thenReturn(prescription);
@@ -209,13 +332,14 @@ class PrescriptionServiceTest {
                 PrescriptionStatus.CANCELLED,
                 response.getStatus()
         );
+
         assertEquals(
                 "Patient requested cancellation",
                 response.getCancellationReason()
         );
+
         assertNotNull(response.getCancelledAt());
     }
-
 
     @Test
     void shouldRecordAuditEntryOnCancellation() {
@@ -223,13 +347,16 @@ class PrescriptionServiceTest {
         Prescription prescription =
                 createPrescription(PrescriptionStatus.ISSUED);
 
-        when(prescriptionRepository.findByIdOrThrow(1L))
-                .thenReturn(prescription);
+        when(prescriptionRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(prescription));
 
         when(prescriptionRepository.save(any(Prescription.class)))
                 .thenReturn(prescription);
 
-        prescriptionService.cancelPrescription(1L, "Patient requested cancellation");
+        prescriptionService.cancelPrescription(
+                1L,
+                "Patient requested cancellation"
+        );
 
         verify(auditService, times(1)).recordEvent(
                 eq(1L),
@@ -243,12 +370,15 @@ class PrescriptionServiceTest {
     @Test
     void shouldThrowWhenPrescriptionNotFound() {
 
-        when(prescriptionRepository.findByIdOrThrow(999L))
-                .thenThrow(new ResourceNotFoundException("Prescription not found with id: 999"));
+        when(prescriptionRepository.findByIdForUpdate(999L))
+                .thenReturn(Optional.empty());
 
         assertThrows(
                 ResourceNotFoundException.class,
-                () -> prescriptionService.cancelPrescription(999L, "Some reason")
+                () -> prescriptionService.cancelPrescription(
+                        999L,
+                        "Some reason"
+                )
         );
     }
 
@@ -258,15 +388,17 @@ class PrescriptionServiceTest {
         Prescription prescription =
                 createPrescription(PrescriptionStatus.ISSUED);
 
-        when(prescriptionRepository.findByIdOrThrow(1L))
-                .thenReturn(prescription);
+        when(prescriptionRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(prescription));
 
         assertThrows(
                 InvalidCancellationException.class,
-                () -> prescriptionService.cancelPrescription(1L, "   ")
+                () -> prescriptionService.cancelPrescription(
+                        1L,
+                        "   "
+                )
         );
     }
-
 
     @Test
     void shouldThrowWhenCancellationReasonIsNull() {
@@ -274,15 +406,17 @@ class PrescriptionServiceTest {
         Prescription prescription =
                 createPrescription(PrescriptionStatus.ISSUED);
 
-        when(prescriptionRepository.findByIdOrThrow(1L))
-                .thenReturn(prescription);
+        when(prescriptionRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(prescription));
 
         assertThrows(
                 InvalidCancellationException.class,
-                () -> prescriptionService.cancelPrescription(1L, null)
+                () -> prescriptionService.cancelPrescription(
+                        1L,
+                        null
+                )
         );
     }
-
 
     @Test
     void shouldThrowWhenCancellingAlreadyCancelledPrescription() {
@@ -290,15 +424,17 @@ class PrescriptionServiceTest {
         Prescription prescription =
                 createPrescription(PrescriptionStatus.CANCELLED);
 
-        when(prescriptionRepository.findByIdOrThrow(1L))
-                .thenReturn(prescription);
+        when(prescriptionRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(prescription));
 
         assertThrows(
                 InvalidStatusTransitionException.class,
-                () -> prescriptionService.cancelPrescription(1L, "Patient requested cancellation")
+                () -> prescriptionService.cancelPrescription(
+                        1L,
+                        "Patient requested cancellation"
+                )
         );
     }
-
 
     @Test
     void shouldThrowWhenCancellingCompletedPrescription() {
@@ -306,15 +442,17 @@ class PrescriptionServiceTest {
         Prescription prescription =
                 createPrescription(PrescriptionStatus.COMPLETED);
 
-        when(prescriptionRepository.findByIdOrThrow(1L))
-                .thenReturn(prescription);
+        when(prescriptionRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(prescription));
 
         assertThrows(
                 InvalidStatusTransitionException.class,
-                () -> prescriptionService.cancelPrescription(1L, "Patient requested cancellation")
+                () -> prescriptionService.cancelPrescription(
+                        1L,
+                        "Patient requested cancellation"
+                )
         );
     }
-
 
     @Test
     void shouldPropagateExceptionWhenSaveFails() {
@@ -322,17 +460,23 @@ class PrescriptionServiceTest {
         Prescription prescription =
                 createPrescription(PrescriptionStatus.ISSUED);
 
-        when(prescriptionRepository.findByIdOrThrow(1L))
-                .thenReturn(prescription);
+        when(prescriptionRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(prescription));
 
         when(prescriptionRepository.save(any(Prescription.class)))
-                .thenThrow(new RuntimeException("Database connection failed"));
+                .thenThrow(
+                        new RuntimeException("Database connection failed")
+                );
 
         assertThrows(
                 RuntimeException.class,
-                () -> prescriptionService.cancelPrescription(1L, "Patient requested cancellation")
+                () -> prescriptionService.cancelPrescription(
+                        1L,
+                        "Patient requested cancellation"
+                )
         );
 
-        verify(auditService, never()).recordEvent(any(), any(), any(), any(), any());
+        verify(auditService, never())
+                .recordEvent(any(), any(), any(), any(), any());
     }
 }
