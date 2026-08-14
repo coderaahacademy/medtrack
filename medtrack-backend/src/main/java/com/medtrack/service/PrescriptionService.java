@@ -156,6 +156,20 @@ public class PrescriptionService {
             );
         }
 
+        if (prescription.getStatus() == PrescriptionStatus.ISSUED
+                && newStatus == PrescriptionStatus.SENT_TO_PHARMACY) {
+            throw new InvalidStatusTransitionException(
+                    "Use the send-to-pharmacy workflow to send a prescription"
+            );
+        }
+
+        if (prescription.getStatus() == PrescriptionStatus.SENT_TO_PHARMACY
+                && newStatus == PrescriptionStatus.COMPLETED) {
+            throw new InvalidStatusTransitionException(
+                    "Prescription completion must go through the fulfillment workflow"
+            );
+        }
+
         statusTransitionService.validate(
                 prescription.getStatus(),
                 newStatus

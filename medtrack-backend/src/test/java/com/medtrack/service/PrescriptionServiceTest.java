@@ -84,7 +84,7 @@ class PrescriptionServiceTest {
     // ============================================================
 
     @Test
-    void shouldAllowIssuedToSentToPharmacy() {
+    void shouldRejectIssuedToSentToPharmacyViaGenericStatusUpdate() {
 
         Prescription prescription =
                 createPrescription(PrescriptionStatus.ISSUED);
@@ -92,22 +92,23 @@ class PrescriptionServiceTest {
         when(prescriptionRepository.findByIdForUpdate(1L))
                 .thenReturn(Optional.of(prescription));
 
-        when(prescriptionRepository.save(any(Prescription.class)))
-                .thenReturn(prescription);
-
-        var response = prescriptionService.updateStatus(
-                1L,
-                PrescriptionStatus.SENT_TO_PHARMACY
+        assertThrows(
+                InvalidStatusTransitionException.class,
+                () -> prescriptionService.updateStatus(
+                        1L,
+                        PrescriptionStatus.SENT_TO_PHARMACY
+                )
         );
 
-        assertEquals(
-                PrescriptionStatus.SENT_TO_PHARMACY,
-                response.getStatus()
-        );
+        verify(prescriptionRepository, never())
+                .save(any(Prescription.class));
+
+        verify(auditService, never())
+                .recordEvent(any(), any(), any(), any(), any());
     }
 
     @Test
-    void shouldAllowSentToPharmacyToCompleted() {
+    void shouldRejectSentToPharmacyToCompletedViaGenericStatusUpdate() {
 
         Prescription prescription =
                 createPrescription(PrescriptionStatus.SENT_TO_PHARMACY);
@@ -115,19 +116,21 @@ class PrescriptionServiceTest {
         when(prescriptionRepository.findByIdForUpdate(1L))
                 .thenReturn(Optional.of(prescription));
 
-        when(prescriptionRepository.save(any(Prescription.class)))
-                .thenReturn(prescription);
-
-        var response = prescriptionService.updateStatus(
-                1L,
-                PrescriptionStatus.COMPLETED
+        assertThrows(
+                InvalidStatusTransitionException.class,
+                () -> prescriptionService.updateStatus(
+                        1L,
+                        PrescriptionStatus.COMPLETED
+                )
         );
 
-        assertEquals(
-                PrescriptionStatus.COMPLETED,
-                response.getStatus()
-        );
+        verify(prescriptionRepository, never())
+                .save(any(Prescription.class));
+
+        verify(auditService, never())
+                .recordEvent(any(), any(), any(), any(), any());
     }
+
 
     @Test
     void shouldRejectCompletedToIssued() {

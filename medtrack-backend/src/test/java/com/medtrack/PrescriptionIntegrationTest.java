@@ -308,10 +308,16 @@ public class PrescriptionIntegrationTest {
     }
 
     @Test
-    void shouldReturn200WhenUpdatingIssuedToSentToPharmacy() throws Exception {
+    void shouldReturn409WhenUpdatingIssuedToSentToPharmacyViaGenericStatusApi()
+            throws Exception {
+
         Prescription prescription = new Prescription();
-        prescription.setPatient(patientRepository.findById(patientId).orElseThrow());
-        prescription.setDoctor(doctorRepository.findById(doctorId).orElseThrow());
+        prescription.setPatient(
+                patientRepository.findById(patientId).orElseThrow()
+        );
+        prescription.setDoctor(
+                doctorRepository.findById(doctorId).orElseThrow()
+        );
         prescription.setStatus(PrescriptionStatus.ISSUED);
         prescription.setIssueDate(LocalDateTime.now());
 
@@ -323,19 +329,29 @@ public class PrescriptionIntegrationTest {
         request.setStatus(PrescriptionStatus.SENT_TO_PHARMACY);
 
         mockMvc.perform(
-                        patch("/api/prescriptions/" + prescription.getId() + "/status")
+                        patch("/api/prescriptions/"
+                                + prescription.getId()
+                                + "/status")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request))
                 )
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("SENT_TO_PHARMACY"));
+                .andExpect(status().isConflict())
+                .andExpect(
+                        jsonPath("$.code")
+                                .value("INVALID_STATE_TRANSITION")
+                );
     }
-
     @Test
-    void shouldReturn200WhenUpdatingSentToPharmacyToCompleted() throws Exception {
+    void shouldReturn409WhenUpdatingSentToPharmacyToCompletedViaGenericStatusApi()
+            throws Exception {
+
         Prescription prescription = new Prescription();
-        prescription.setPatient(patientRepository.findById(patientId).orElseThrow());
-        prescription.setDoctor(doctorRepository.findById(doctorId).orElseThrow());
+        prescription.setPatient(
+                patientRepository.findById(patientId).orElseThrow()
+        );
+        prescription.setDoctor(
+                doctorRepository.findById(doctorId).orElseThrow()
+        );
         prescription.setStatus(PrescriptionStatus.SENT_TO_PHARMACY);
         prescription.setIssueDate(LocalDateTime.now());
 
@@ -347,14 +363,18 @@ public class PrescriptionIntegrationTest {
         request.setStatus(PrescriptionStatus.COMPLETED);
 
         mockMvc.perform(
-                        patch("/api/prescriptions/" + prescription.getId() + "/status")
+                        patch("/api/prescriptions/"
+                                + prescription.getId()
+                                + "/status")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request))
                 )
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("COMPLETED"));
+                .andExpect(status().isConflict())
+                .andExpect(
+                        jsonPath("$.code")
+                                .value("INVALID_STATE_TRANSITION")
+                );
     }
-
     @Test
     void shouldReturn409WhenUpdatingCompletedToIssued() throws Exception {
         Prescription prescription = new Prescription();
