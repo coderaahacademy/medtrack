@@ -49,6 +49,13 @@ public class PrescriptionController {
         return ResponseEntity.ok(prescriptionService.getById(id));
     }
     @PatchMapping("/{id}/status")
+    @Operation(summary = "Update prescription status")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Prescription status successfully updated"),
+            @ApiResponse(responseCode = "400", description = "Invalid request"),
+            @ApiResponse(responseCode = "404", description = "Prescription not found"),
+            @ApiResponse(responseCode = "409", description = "Invalid prescription status transition")
+    })
     public ResponseEntity<PrescriptionResponse> updateStatus(
             @PathVariable Long id,
             @Valid @RequestBody PrescriptionStatusUpdateRequest request) {
