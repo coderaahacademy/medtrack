@@ -15,10 +15,17 @@ Students will work using:
 
 - Java 21
 - Spring Boot 3
+- Spring Security 6 & JWT (T42)
 - Spring Web
 - Spring Data JPA
 - H2 Database (development)
 - Maven
+
+---
+
+# 📚 Documentation
+
+- [Secure Authentication Guide (T42)](docs/T42-secure-authentication.md)
 
 ---
 
