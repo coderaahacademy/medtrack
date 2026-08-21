@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -17,20 +18,23 @@ import org.springframework.web.bind.annotation.*;
 public class VisitController {
 
     private final VisitService visitService;
-    public  VisitController(VisitService visitService) { this.visitService = visitService; }
+    public VisitController(VisitService visitService) { this.visitService = visitService; }
 
     @PostMapping
+    @PreAuthorize("@authz.canCreateVisit(#request.doctorId)")
     public ResponseEntity<VisitResponse> create(@Valid @RequestBody CreateVisitRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(visitService.create(request));
     }
 
     @GetMapping("/patient/{patientId}")
+    @PreAuthorize("@authz.canAccessPatientVisits(#patientId)")
     public ResponseEntity<Page<VisitResponse>> getByPatientId(
             @PathVariable Long patientId, Pageable pageable) {
         return ResponseEntity.ok(visitService.getByPatientId(patientId, pageable));
     }
 
     @PostMapping("/{visitId}/notes")
+    @PreAuthorize("@authz.canAddVisitNotes(#visitId)")
     public ResponseEntity<NotesResponse> createVisitNote(
             @PathVariable Long visitId,
             @Valid @RequestBody NotesRequest request){
@@ -39,6 +43,7 @@ public class VisitController {
     }
 
     @GetMapping("/{visitId}/notes")
+    @PreAuthorize("@authz.canReadVisitNotes(#visitId)")
     public ResponseEntity<NotesResponse> getVisitNotes(@PathVariable Long visitId){
         NotesResponse response = visitService.getNoteByVisitID(visitId);
         return ResponseEntity.ok(response);

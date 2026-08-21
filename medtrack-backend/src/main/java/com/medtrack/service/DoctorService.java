@@ -10,6 +10,9 @@ import com.medtrack.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -44,6 +47,17 @@ public class DoctorService {
     @Transactional
     public DoctorResponse update(Long id, UpdateDoctorRequest request) {
         Doctor doctor = doctorRepository.findByIdOrThrow(id);
+
+        // Ordinary owners cannot reactivate a doctor profile deactivated by an administrator
+        if (!doctor.isActive() && request.isActive()) {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            boolean isAdmin = auth != null && auth.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+            if (!isAdmin) {
+                throw new AccessDeniedException("Only administrators can reactivate a deactivated doctor profile");
+            }
+        }
+
         mapRequestToEntity(request,doctor);
         return toResponse(doctorRepository.saveAndFlush(doctor));
     }

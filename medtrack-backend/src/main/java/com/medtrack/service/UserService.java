@@ -10,6 +10,7 @@ import com.medtrack.enums.Role;
 import com.medtrack.enums.UserStatus;
 import com.medtrack.repository.UserRepository;
 import com.medtrack.security.JwtService;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -39,6 +40,9 @@ public class UserService {
 
     @Transactional
     public UserResponse register(RegisterUserRequest request) {
+        if (request.getRole() == Role.ADMIN) {
+            throw new AccessDeniedException("Public registration with ADMIN role is not allowed");
+        }
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("Email is already registered: " + request.getEmail());
         }

@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -46,6 +47,10 @@ public class PrescriptionSubmissionController {
                     description = "Invalid request body"
             ),
             @ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden - Only the prescribing doctor can send this prescription"
+            ),
+            @ApiResponse(
                     responseCode = "404",
                     description = "Prescription or pharmacy not found"
             ),
@@ -55,6 +60,7 @@ public class PrescriptionSubmissionController {
             )
     })
     @PostMapping("/{prescriptionId}/send-to-pharmacy")
+    @PreAuthorize("@authz.canSendToPharmacy(#prescriptionId)")
     public ResponseEntity<SendToPharmacyResponse> sendToPharmacy(
             @PathVariable Long prescriptionId,
             @Valid @RequestBody SendToPharmacyRequest request

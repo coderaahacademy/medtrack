@@ -6,6 +6,7 @@ import com.medtrack.service.InventoryService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,20 +21,25 @@ public class InventoryController {
     }
 
     @PostMapping
+    @PreAuthorize("@authz.canAccessPharmacyInventory(#pharmacyId)")
     public ResponseEntity<InventoryResponse> create(@PathVariable Long pharmacyId, @Valid @RequestBody InventoryRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(inventoryService.create(pharmacyId, request));
     }
 
     @PutMapping("/{medicationId}")
+    @PreAuthorize("@authz.canAccessPharmacyInventory(#pharmacyId)")
     public ResponseEntity<InventoryResponse> update(@PathVariable Long pharmacyId, @PathVariable Long medicationId, @Valid @RequestBody InventoryRequest request) {
         return ResponseEntity.ok(inventoryService.update(pharmacyId, medicationId, request));
     }
 
     @GetMapping("/low-stock")
+    @PreAuthorize("@authz.canAccessPharmacyInventory(#pharmacyId)")
     public ResponseEntity<List<InventoryResponse>> getLowStockInventory(@PathVariable Long pharmacyId) {
         return ResponseEntity.ok(inventoryService.getLowStockInventory(pharmacyId));
     }
+
     @GetMapping
+    @PreAuthorize("@authz.canAccessPharmacyInventory(#pharmacyId)")
     public ResponseEntity<List<InventoryResponse>> getByPharmacy(
             @PathVariable Long pharmacyId) {
 

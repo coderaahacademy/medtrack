@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -43,6 +44,24 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponseDto> handleAccessDeniedException(
+            AccessDeniedException ex, HttpServletRequest request) {
+        String message = ex.getMessage();
+        if (message == null || message.isBlank()
+                || "Access is denied".equalsIgnoreCase(message)
+                || "Access Denied".equalsIgnoreCase(message)) {
+            message = "You do not have permission to access this resource";
+        }
+        return buildResponse(
+                HttpStatus.FORBIDDEN,
+                "FORBIDDEN",
+                message,
+                request,
+                Collections.emptyList()
+        );
+    }
+
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<ErrorResponseDto> handleResponseStatusException(
             ResponseStatusException ex, HttpServletRequest request) {
@@ -52,6 +71,7 @@ public class GlobalExceptionHandler {
             case NOT_FOUND -> "RESOURCE_NOT_FOUND";
             case CONFLICT -> "CONFLICT";
             case BAD_REQUEST -> "BAD_REQUEST";
+            case FORBIDDEN -> "FORBIDDEN";
             case UNPROCESSABLE_ENTITY -> "UNPROCESSABLE_ENTITY";
             default -> status.name();
         };

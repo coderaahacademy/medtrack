@@ -40,6 +40,9 @@ public class User {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private Doctor doctor;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private Pharmacy pharmacy;
+
     public User() {
     }
 
@@ -75,6 +78,14 @@ public class User {
 
     public void setDoctor(Doctor doctor) {
         this.doctor = doctor;
+    }
+
+    public Pharmacy getPharmacy() {
+        return pharmacy;
+    }
+
+    public void setPharmacy(Pharmacy pharmacy) {
+        this.pharmacy = pharmacy;
     }
 
     @PrePersist
