@@ -1,7 +1,8 @@
 package com.medtrack.service;
 
-import com.medtrack.dto.InventoryRequest;
+import com.medtrack.dto.CreateInventoryRequest;
 import com.medtrack.dto.InventoryResponse;
+import com.medtrack.dto.UpdateInventoryRequest;
 import com.medtrack.entity.Medication;
 import com.medtrack.entity.Pharmacy;
 import com.medtrack.entity.PharmacyInventory;
@@ -17,23 +18,30 @@ import java.util.List;
 
 @Service
 public class InventoryService {
+
     private final InventoryRepository inventoryRepository;
     private final MedicationRepository medicationRepository;
     private final PharmacyRepository pharmacyRepository;
 
-    public InventoryService(InventoryRepository inventoryRepository,
-                            MedicationRepository medicationRepository,
-                            PharmacyRepository pharmacyRepository) {
+    public InventoryService(
+            InventoryRepository inventoryRepository,
+            MedicationRepository medicationRepository,
+            PharmacyRepository pharmacyRepository) {
+
         this.inventoryRepository = inventoryRepository;
         this.medicationRepository = medicationRepository;
         this.pharmacyRepository = pharmacyRepository;
     }
 
     @Transactional
-    public InventoryResponse create(Long pharmacyId, InventoryRequest request) {
-        Long medicationId = request.getMedicationId();
+    public InventoryResponse create(
+            Long pharmacyId,
+            CreateInventoryRequest request) {
 
-        if (inventoryRepository.existsByPharmacyIdAndMedicationId(pharmacyId, medicationId)) {
+        if (inventoryRepository.existsByPharmacyIdAndMedicationId(
+                pharmacyId,
+                request.getMedicationId())) {
+
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
                     "Inventory record already exists for this pharmacy and medication."
@@ -41,21 +49,44 @@ public class InventoryService {
         }
 
         Pharmacy pharmacy = pharmacyRepository.findByIdOrThrow(pharmacyId);
-        Medication medication = medicationRepository.findByIdOrThrow(medicationId);
+
+        if (!pharmacy.isActive()) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Cannot create inventory for an inactive pharmacy."
+            );
+        }
+
+        Medication medication =
+                medicationRepository.findByIdOrThrow(request.getMedicationId());
+
+        if (!medication.isActive()) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Cannot create inventory for an inactive medication."
+            );
+        }
 
         PharmacyInventory inventory = new PharmacyInventory();
+
         inventory.setPharmacy(pharmacy);
         inventory.setMedication(medication);
         inventory.setQuantityAvailable(request.getQuantityAvailable());
         inventory.setMinimumStock(request.getMinimumStock());
 
-        return toResponse(inventoryRepository.saveAndFlush(inventory));
+        return toResponse(
+                inventoryRepository.saveAndFlush(inventory)
+        );
     }
 
     @Transactional
-    public InventoryResponse update(Long pharmacyId, Long medicationId, InventoryRequest request) {
+    public InventoryResponse update(
+            Long pharmacyId,
+            Long medicationId,
+            UpdateInventoryRequest request) {
+
         PharmacyInventory inventory = inventoryRepository
-                .findByPharmacyIdAndMedicationId(pharmacyId, medicationId)
+                .findForUpdate(pharmacyId, medicationId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Inventory record not found."
@@ -64,18 +95,23 @@ public class InventoryService {
         inventory.setQuantityAvailable(request.getQuantityAvailable());
         inventory.setMinimumStock(request.getMinimumStock());
 
-        return toResponse(inventoryRepository.saveAndFlush(inventory));
+        return toResponse(
+                inventoryRepository.saveAndFlush(inventory)
+        );
     }
 
     @Transactional(readOnly = true)
     public List<InventoryResponse> getLowStockInventory(Long pharmacyId) {
+
         return inventoryRepository.findLowStockByPharmacyId(pharmacyId)
                 .stream()
                 .map(this::toResponse)
                 .toList();
     }
+
     @Transactional(readOnly = true)
     public List<InventoryResponse> getByPharmacy(Long pharmacyId) {
+
         return inventoryRepository.findByPharmacyId(pharmacyId)
                 .stream()
                 .map(this::toResponse)
@@ -83,13 +119,16 @@ public class InventoryService {
     }
 
     private InventoryResponse toResponse(PharmacyInventory inventory) {
+
         InventoryResponse response = new InventoryResponse();
+
         response.setId(inventory.getId());
         response.setPharmacyId(inventory.getPharmacy().getId());
         response.setMedicationId(inventory.getMedication().getId());
         response.setQuantityAvailable(inventory.getQuantityAvailable());
         response.setMinimumStock(inventory.getMinimumStock());
         response.setUpdatedAt(inventory.getUpdatedAt());
+
         return response;
     }
 }

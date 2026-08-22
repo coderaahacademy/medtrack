@@ -1,6 +1,8 @@
 package com.medtrack.repository;
 
 import com.medtrack.entity.PharmacyInventory;
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -13,9 +15,27 @@ public interface InventoryRepository extends BaseRepository<PharmacyInventory, L
 
     List<PharmacyInventory> findByPharmacyId(Long pharmacyId);
 
-    Optional<PharmacyInventory> findByPharmacyIdAndMedicationId(Long pharmacyId, Long medicationId);
+    Optional<PharmacyInventory> findByPharmacyIdAndMedicationId(
+            Long pharmacyId,
+            Long medicationId
+    );
 
-    boolean existsByPharmacyIdAndMedicationId(Long pharmacyId, Long medicationId);
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+        SELECT i
+        FROM PharmacyInventory i
+        WHERE i.pharmacy.id = :pharmacyId
+          AND i.medication.id = :medicationId
+    """)
+    Optional<PharmacyInventory> findForUpdate(
+            @Param("pharmacyId") Long pharmacyId,
+            @Param("medicationId") Long medicationId
+    );
+
+    boolean existsByPharmacyIdAndMedicationId(
+            Long pharmacyId,
+            Long medicationId
+    );
 
     @Query("""
         SELECT i
@@ -24,5 +44,7 @@ public interface InventoryRepository extends BaseRepository<PharmacyInventory, L
           AND i.minimumStock IS NOT NULL
           AND i.quantityAvailable <= i.minimumStock
     """)
-    List<PharmacyInventory> findLowStockByPharmacyId(@Param("pharmacyId") Long pharmacyId);
+    List<PharmacyInventory> findLowStockByPharmacyId(
+            @Param("pharmacyId") Long pharmacyId
+    );
 }

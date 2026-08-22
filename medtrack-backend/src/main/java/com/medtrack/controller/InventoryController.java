@@ -1,7 +1,8 @@
 package com.medtrack.controller;
 
-import com.medtrack.dto.InventoryRequest;
+import com.medtrack.dto.CreateInventoryRequest;
 import com.medtrack.dto.InventoryResponse;
+import com.medtrack.dto.UpdateInventoryRequest;
 import com.medtrack.service.InventoryService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -13,6 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/pharmacies/{pharmacyId}/inventory")
 public class InventoryController {
+
     private final InventoryService inventoryService;
 
     public InventoryController(InventoryService inventoryService) {
@@ -20,19 +22,35 @@ public class InventoryController {
     }
 
     @PostMapping
-    public ResponseEntity<InventoryResponse> create(@PathVariable Long pharmacyId, @Valid @RequestBody InventoryRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(inventoryService.create(pharmacyId, request));
+    public ResponseEntity<InventoryResponse> create(
+            @PathVariable Long pharmacyId,
+            @Valid @RequestBody CreateInventoryRequest request) {
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(inventoryService.create(pharmacyId, request));
     }
 
     @PutMapping("/{medicationId}")
-    public ResponseEntity<InventoryResponse> update(@PathVariable Long pharmacyId, @PathVariable Long medicationId, @Valid @RequestBody InventoryRequest request) {
-        return ResponseEntity.ok(inventoryService.update(pharmacyId, medicationId, request));
+    public ResponseEntity<InventoryResponse> update(
+            @PathVariable Long pharmacyId,
+            @PathVariable Long medicationId,
+            @Valid @RequestBody UpdateInventoryRequest request) {
+
+        return ResponseEntity.ok(
+                inventoryService.update(pharmacyId, medicationId, request)
+        );
     }
 
     @GetMapping("/low-stock")
-    public ResponseEntity<List<InventoryResponse>> getLowStockInventory(@PathVariable Long pharmacyId) {
-        return ResponseEntity.ok(inventoryService.getLowStockInventory(pharmacyId));
+    public ResponseEntity<List<InventoryResponse>> getLowStockInventory(
+            @PathVariable Long pharmacyId) {
+
+        return ResponseEntity.ok(
+                inventoryService.getLowStockInventory(pharmacyId)
+        );
     }
+
     @GetMapping
     public ResponseEntity<List<InventoryResponse>> getByPharmacy(
             @PathVariable Long pharmacyId) {
