@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,16 +22,19 @@ public class MedicationController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<MedicationResponse> create(@Valid @RequestBody MedicationRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(medicationService.create(request));
     }
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Page<MedicationResponse>> getAll(Pageable pageable) {
         return ResponseEntity.ok(medicationService.getAll(pageable));
     }
 
     @GetMapping("/search")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Page<MedicationResponse>> search(
             @RequestParam(name = "q", required = false) String q,
             @RequestParam(required = false) String name,
@@ -41,11 +45,13 @@ public class MedicationController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<MedicationResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(medicationService.getById(id));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<MedicationResponse> update(
             @PathVariable Long id,
             @Valid @RequestBody MedicationRequest request) {
@@ -53,6 +59,7 @@ public class MedicationController {
     }
 
     @PatchMapping("/{id}/deactivate")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<MessageResponse> deactivate(@PathVariable Long id) {
         return ResponseEntity.ok(medicationService.deactivate(id));
     }

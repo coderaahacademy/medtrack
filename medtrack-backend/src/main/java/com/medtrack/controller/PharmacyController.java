@@ -1,5 +1,6 @@
 package com.medtrack.controller;
 
+import com.medtrack.dto.CreatePharmacyRequest;
 import com.medtrack.dto.PharmacyRequest;
 import com.medtrack.dto.PharmacyResponse;
 import com.medtrack.service.PharmacyService;
@@ -8,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,21 +22,25 @@ public class PharmacyController {
     }
 
     @PostMapping
-    public ResponseEntity<PharmacyResponse> create(@Valid @RequestBody PharmacyRequest request) {
+    @PreAuthorize("@authz.canCreatePharmacy(#request.userId)")
+    public ResponseEntity<PharmacyResponse> create(@Valid @RequestBody CreatePharmacyRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(pharmacyService.create(request));
     }
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Page<PharmacyResponse>> getAll(Pageable pageable) {
         return ResponseEntity.ok(pharmacyService.getAll(pageable));
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<PharmacyResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(pharmacyService.getById(id));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("@authz.canModifyPharmacy(#id)")
     public ResponseEntity<PharmacyResponse> update(
             @PathVariable Long id,
             @Valid @RequestBody PharmacyRequest request) {
@@ -43,6 +49,7 @@ public class PharmacyController {
     }
 
     @PatchMapping("/{id}/deactivate")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PharmacyResponse> deactivate(@PathVariable Long id) {
 
         return ResponseEntity.ok(pharmacyService.deactivate(id));

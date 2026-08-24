@@ -32,7 +32,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@WithMockUser
 public class PrescriptionIntegrationTest {
 
     @Autowired
@@ -74,12 +73,18 @@ public class PrescriptionIntegrationTest {
     @Autowired
     private com.medtrack.service.PrescriptionSubmissionService submissionService;
 
+    @Autowired
+    private com.medtrack.security.JwtService jwtService;
+
     @SpyBean
     private PrescriptionAuditService auditService;
 
     private Long patientId;
     private Long doctorId;
     private Long medicationId;
+    private String doctorToken;
+    private String adminToken;
+    private User userPharmacy;
 
     @BeforeEach
     void setUp() {
@@ -97,6 +102,7 @@ public class PrescriptionIntegrationTest {
         user1.setEmail("patient@example.com");
         user1.setPasswordHash("hash");
         user1.setStatus(com.medtrack.enums.UserStatus.ACTIVE);
+        user1.addRole(com.medtrack.enums.Role.PATIENT);
         user1 = userRepository.save(user1);
 
         Patient patient = new Patient();
@@ -109,6 +115,7 @@ public class PrescriptionIntegrationTest {
         user2.setEmail("doctor@example.com");
         user2.setPasswordHash("hash");
         user2.setStatus(com.medtrack.enums.UserStatus.ACTIVE);
+        user2.addRole(com.medtrack.enums.Role.DOCTOR);
         user2 = userRepository.save(user2);
 
         Doctor doctor = new Doctor();
@@ -118,6 +125,23 @@ public class PrescriptionIntegrationTest {
         doctor.setLicenseNumber("LIC123");
         doctor = doctorRepository.save(doctor);
         doctorId = doctor.getId();
+
+        User adminUser = new User();
+        adminUser.setEmail("admin@example.com");
+        adminUser.setPasswordHash("hash");
+        adminUser.setStatus(com.medtrack.enums.UserStatus.ACTIVE);
+        adminUser.addRole(com.medtrack.enums.Role.ADMIN);
+        adminUser = userRepository.save(adminUser);
+
+        userPharmacy = new User();
+        userPharmacy.setEmail("pharmacy@example.com");
+        userPharmacy.setPasswordHash("hash");
+        userPharmacy.setStatus(com.medtrack.enums.UserStatus.ACTIVE);
+        userPharmacy.addRole(com.medtrack.enums.Role.PHARMACY);
+        userPharmacy = userRepository.save(userPharmacy);
+
+        doctorToken = jwtService.generateToken(user2);
+        adminToken = jwtService.generateToken(adminUser);
 
         Medication medication = new Medication();
         medication.setName("Amoxicillin");
@@ -225,6 +249,7 @@ public class PrescriptionIntegrationTest {
         request.setReason("Patient requested cancellation");
 
         mockMvc.perform(patch("/api/prescriptions/" + prescription.getId() + "/cancel")
+                        .header("Authorization", "Bearer " + doctorToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -245,6 +270,7 @@ public class PrescriptionIntegrationTest {
         request.setReason("Cancel me");
 
         mockMvc.perform(patch("/api/prescriptions/" + prescription.getId() + "/cancel")
+                        .header("Authorization", "Bearer " + doctorToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict())
@@ -255,6 +281,7 @@ public class PrescriptionIntegrationTest {
     void shouldRollbackSubmissionWhenAuditFails() {
         // Arrange
         Pharmacy pharmacy = new Pharmacy();
+        pharmacy.setUser(userPharmacy);
         pharmacy.setName("Test Pharmacy");
         pharmacy.setActive(true);
         pharmacy = pharmacyRepository.save(pharmacy);
@@ -286,6 +313,7 @@ public class PrescriptionIntegrationTest {
     void shouldSucceedSubmissionAndPersistEverything() {
         // Arrange
         Pharmacy pharmacy = new Pharmacy();
+        pharmacy.setUser(userPharmacy);
         pharmacy.setName("Test Pharmacy");
         pharmacy.setActive(true);
         pharmacy = pharmacyRepository.save(pharmacy);
@@ -334,6 +362,7 @@ public class PrescriptionIntegrationTest {
                         patch("/api/prescriptions/"
                                 + prescription.getId()
                                 + "/status")
+                                .header("Authorization", "Bearer " + adminToken)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request))
                 )
@@ -368,6 +397,7 @@ public class PrescriptionIntegrationTest {
                         patch("/api/prescriptions/"
                                 + prescription.getId()
                                 + "/status")
+                                .header("Authorization", "Bearer " + adminToken)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request))
                 )
@@ -394,6 +424,7 @@ public class PrescriptionIntegrationTest {
 
         mockMvc.perform(
                         patch("/api/prescriptions/" + prescription.getId() + "/status")
+                                .header("Authorization", "Bearer " + adminToken)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request))
                 )
@@ -418,6 +449,7 @@ public class PrescriptionIntegrationTest {
 
         mockMvc.perform(
                         patch("/api/prescriptions/" + prescription.getId() + "/status")
+                                .header("Authorization", "Bearer " + adminToken)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request))
                 )
