@@ -114,6 +114,19 @@ class UserServiceTest {
     }
 
     @Test
+    void shouldThrowAccessDeniedExceptionWhenRegisteringWithAdminRole() {
+        registerRequest.setRole(Role.ADMIN);
+
+        org.springframework.security.access.AccessDeniedException exception = assertThrows(
+                org.springframework.security.access.AccessDeniedException.class,
+                () -> userService.register(registerRequest)
+        );
+
+        assertTrue(exception.getMessage().contains("Public registration with ADMIN role is not allowed"));
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
     void shouldLoginSuccessfullyAndReturnJwtResponse() {
         User user = new User();
         user.setId(1L);

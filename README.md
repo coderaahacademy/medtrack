@@ -26,6 +26,7 @@ Students will work using:
 # 📚 Documentation
 
 - [Secure Authentication Guide (T42)](docs/T42-secure-authentication.md)
+- [Role-Based Authorization Guide (T43)](docs/T43-role-authorization.md)
 
 ---
 

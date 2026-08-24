@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -22,26 +23,31 @@ public class DoctorController {
     }
 
     @PostMapping
+    @PreAuthorize("@authz.canCreateDoctor(#request.userId)")
     public ResponseEntity<DoctorResponse> create(@Valid @RequestBody CreateDoctorRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(doctorService.create(request));
     }
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Page<DoctorResponse>> getAll(Pageable pageable) {
         return ResponseEntity.ok(doctorService.getAll(pageable));
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<DoctorResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(doctorService.getById(id));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("@authz.canModifyDoctor(#id)")
     public ResponseEntity<DoctorResponse> update(@PathVariable Long id, @Valid @RequestBody UpdateDoctorRequest request) {
         return ResponseEntity.ok(doctorService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("@authz.canModifyDoctor(#id)")
     public ResponseEntity<MessageResponse> delete(@PathVariable Long id) {
         return ResponseEntity.ok(doctorService.delete(id));
     }

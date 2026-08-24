@@ -5,7 +5,9 @@ import com.medtrack.enums.FulfillmentStatus;
 import com.medtrack.enums.PrescriptionStatus;
 import com.medtrack.exception.InvalidStatusTransitionException;
 import com.medtrack.exception.ResourceNotFoundException;
+import com.medtrack.security.ResourceAuthorizationService;
 import com.medtrack.service.PrescriptionSubmissionService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -17,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -32,6 +35,14 @@ class PrescriptionSubmissionControllerTest {
 
     @MockitoBean
     private PrescriptionSubmissionService submissionService;
+
+    @MockitoBean
+    private ResourceAuthorizationService authz;
+
+    @BeforeEach
+    void setUp() {
+        when(authz.canSendToPharmacy(any())).thenReturn(true);
+    }
 
     @Test
     void shouldReturn201WhenPrescriptionIsSent() throws Exception {
