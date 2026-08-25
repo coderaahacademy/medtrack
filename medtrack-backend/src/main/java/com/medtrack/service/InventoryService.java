@@ -1,5 +1,6 @@
 package com.medtrack.service;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import com.medtrack.dto.CreateInventoryRequest;
 import com.medtrack.dto.InventoryResponse;
 import com.medtrack.dto.UpdateInventoryRequest;
@@ -74,9 +75,17 @@ public class InventoryService {
         inventory.setQuantityAvailable(request.getQuantityAvailable());
         inventory.setMinimumStock(request.getMinimumStock());
 
-        return toResponse(
-                inventoryRepository.saveAndFlush(inventory)
-        );
+        try {
+            return toResponse(
+                    inventoryRepository.saveAndFlush(inventory)
+            );
+        } catch (DataIntegrityViolationException ex) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Inventory record already exists for this pharmacy and medication.",
+                    ex
+            );
+        }
     }
 
     @Transactional
