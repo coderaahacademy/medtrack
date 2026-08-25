@@ -146,7 +146,7 @@ public class FulfillmentService {
             Long medicationId = item.getMedication().getId();
 
             PharmacyInventory inventory = inventoryRepository
-                    .findByPharmacyIdAndMedicationId(pharmacyId, medicationId)
+                    .findForUpdate(pharmacyId, medicationId)
                     .orElseThrow(() -> new IllegalArgumentException(
                             "No inventory found for medication id " + medicationId));
 
