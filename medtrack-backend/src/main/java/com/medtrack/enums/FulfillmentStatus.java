@@ -6,5 +6,6 @@ public enum FulfillmentStatus {
     REJECTED,
     PREPARING,
     READY_FOR_PICKUP,
+    PARTIALLY_FULFILLED,
     COMPLETED
 }

@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import com.medtrack.dto.CompleteFulfillmentRequest;
 
 @RestController
 @RequestMapping("/api/fulfillments")
@@ -46,7 +47,9 @@ public class FulfillmentController {
 
     @PatchMapping("/{id}/completed")
     @PreAuthorize("@authz.canModifyFulfillment(#id)")
-    public ResponseEntity<FulfillmentResponse> completed(@PathVariable Long id) {
-        return ResponseEntity.ok(fulfillmentService.completed(id));
+    public ResponseEntity<FulfillmentResponse> completed(
+            @PathVariable Long id,
+            @Valid @RequestBody CompleteFulfillmentRequest request) {
+        return ResponseEntity.ok(fulfillmentService.completed(id, request));
     }
 }
