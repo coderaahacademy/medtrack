@@ -52,8 +52,6 @@ public class FulfillmentService {
                             + fulfillment.getStatus());
         }
 
-        checkInventorySufficient(fulfillment);
-
         fulfillment.setStatus(FulfillmentStatus.ACCEPTED);
         fulfillment.setAcceptedAt(LocalDateTime.now());
 
@@ -128,7 +126,10 @@ public class FulfillmentService {
             Long id,
             CompleteFulfillmentRequest request) {
 
-        PrescriptionFulfillment fulfillment = getById(id);
+        PrescriptionFulfillment fulfillment =
+                prescriptionFulfillmentRepository.findForUpdate(id)
+                        .orElseThrow(() -> new IllegalArgumentException(
+                                "Fulfillment not found with id " + id));
 
         ensurePrescriptionIsProcessable(fulfillment);
 
@@ -169,20 +170,23 @@ public class FulfillmentService {
                         ? PrescriptionStatus.COMPLETED
                         : PrescriptionStatus.PARTIALLY_FULFILLED;
 
-        statusTransitionService.validate(
-                oldPrescriptionStatus,
-                newPrescriptionStatus
-        );
+        if (oldPrescriptionStatus != newPrescriptionStatus) {
 
-        prescription.setStatus(newPrescriptionStatus);
+            statusTransitionService.validate(
+                    oldPrescriptionStatus,
+                    newPrescriptionStatus
+            );
 
-        auditService.recordEvent(
-                prescription.getId(),
-                oldPrescriptionStatus,
-                newPrescriptionStatus,
-                "SYSTEM",
-                "Prescription status updated through fulfillment completion"
-        );
+            prescription.setStatus(newPrescriptionStatus);
+
+            auditService.recordEvent(
+                    prescription.getId(),
+                    oldPrescriptionStatus,
+                    newPrescriptionStatus,
+                    "SYSTEM",
+                    "Prescription status updated through fulfillment completion"
+            );
+        }
 
 
         if (fullyDispensed) {
@@ -216,41 +220,6 @@ public class FulfillmentService {
                         "Fulfillment not found with id " + id));
     }
 
-    private void checkInventorySufficient(
-            PrescriptionFulfillment fulfillment) {
-
-        Long pharmacyId = fulfillment.getPharmacy().getId();
-
-        for (PrescriptionItem item :
-                fulfillment.getPrescription().getItems()) {
-
-            Long medicationId = item.getMedication().getId();
-
-            int required = item.getQuantity();
-
-            PharmacyInventory inventory =
-                    inventoryRepository
-                            .findByPharmacyIdAndMedicationId(
-                                    pharmacyId,
-                                    medicationId)
-                            .orElseThrow(() ->
-                                    new IllegalArgumentException(
-                                            "No inventory found for medication id "
-                                                    + medicationId));
-
-            if (inventory.getQuantityAvailable() < required) {
-
-                throw new IllegalArgumentException(
-                        "Insufficient inventory for medication id "
-                                + medicationId
-                                + ". Required: "
-                                + required
-                                + ", available: "
-                                + inventory.getQuantityAvailable());
-            }
-        }
-    }
-
     /**
      * Applies the quantity dispensed in the CURRENT operation.
      *
@@ -269,6 +238,22 @@ public class FulfillmentService {
         if (request == null || request.getItems() == null) {
             throw new IllegalArgumentException(
                     "Fulfillment items are required");
+        }
+
+        if (request.getItems().isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Fulfillment operation must contain at least one item");
+        }
+
+        boolean hasPositiveQuantity = request.getItems()
+                .stream()
+                .anyMatch(item ->
+                        item.getDispensedQuantity() != null
+                                && item.getDispensedQuantity() > 0);
+
+        if (!hasPositiveQuantity) {
+            throw new IllegalArgumentException(
+                    "Fulfillment operation must dispense at least one item");
         }
 
         Set<Long> requestedItemIds = new HashSet<>();
@@ -326,7 +311,6 @@ public class FulfillmentService {
                     "All prescription items must be included in the fulfillment request");
         }
     }
-
     /**
      * Reduces inventory only by the quantity dispensed
      * in the CURRENT operation.

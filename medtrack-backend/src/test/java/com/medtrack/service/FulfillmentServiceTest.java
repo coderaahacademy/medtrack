@@ -108,7 +108,7 @@ class FulfillmentServiceTest {
 
     @Test
     void shouldRejectCompletedWhenPrescriptionIsCancelled() {
-        when(fulfillmentRepository.findById(1L))
+        when(fulfillmentRepository.findForUpdate(1L))
                 .thenReturn(Optional.of(fulfillment));
 
         assertThrows(
@@ -155,7 +155,7 @@ class FulfillmentServiceTest {
 
         request.setItems(List.of(requestItem));
 
-        when(fulfillmentRepository.findById(1L))
+        when(fulfillmentRepository.findForUpdate(1L))
                 .thenReturn(Optional.of(fulfillment));
 
         when(inventoryRepository.findForUpdate(20L, 10L))
@@ -222,7 +222,7 @@ class FulfillmentServiceTest {
 
         request.setItems(List.of(requestItem));
 
-        when(fulfillmentRepository.findById(1L))
+        when(fulfillmentRepository.findForUpdate(1L))
                 .thenReturn(Optional.of(fulfillment));
 
         when(inventoryRepository.findForUpdate(20L, 10L))
@@ -290,7 +290,7 @@ class FulfillmentServiceTest {
 
         firstRequest.setItems(List.of(firstRequestItem));
 
-        when(fulfillmentRepository.findById(1L))
+        when(fulfillmentRepository.findForUpdate(1L))
                 .thenReturn(Optional.of(fulfillment));
 
         when(inventoryRepository.findForUpdate(20L, 10L))
@@ -388,7 +388,7 @@ class FulfillmentServiceTest {
 
         request.setItems(List.of(requestItem));
 
-        when(fulfillmentRepository.findById(1L))
+        when(fulfillmentRepository.findForUpdate(1L))
                 .thenReturn(Optional.of(fulfillment));
 
         IllegalArgumentException exception = assertThrows(
@@ -441,7 +441,7 @@ class FulfillmentServiceTest {
 
         request.setItems(List.of(requestItem));
 
-        when(fulfillmentRepository.findById(1L))
+        when(fulfillmentRepository.findForUpdate(1L))
                 .thenReturn(Optional.of(fulfillment));
 
         when(inventoryRepository.findForUpdate(20L, 10L))
@@ -519,7 +519,7 @@ class FulfillmentServiceTest {
 
         request.setItems(List.of(requestItem1, requestItem2));
 
-        when(fulfillmentRepository.findById(1L))
+        when(fulfillmentRepository.findForUpdate(1L))
                 .thenReturn(Optional.of(fulfillment));
 
         when(inventoryRepository.findForUpdate(20L, 10L))
@@ -605,7 +605,7 @@ class FulfillmentServiceTest {
 
         request.setItems(List.of(requestItem1, requestItem2));
 
-        when(fulfillmentRepository.findById(1L))
+        when(fulfillmentRepository.findForUpdate(1L))
                 .thenReturn(Optional.of(fulfillment));
 
         when(inventoryRepository.findForUpdate(20L, 10L))
@@ -631,4 +631,52 @@ class FulfillmentServiceTest {
         assertEquals(10, inventory2.getQuantityAvailable());
     }
 
+    @Test
+    void shouldRejectAllZeroDispensingOperation() {
+
+        Medication medication = new Medication();
+        medication.setId(10L);
+
+        PrescriptionItem item = new PrescriptionItem();
+        item.setId(100L);
+        item.setPrescription(prescription);
+        item.setMedication(medication);
+        item.setQuantity(10);
+        item.setDispensedQuantity(0);
+
+        prescription.setStatus(PrescriptionStatus.SENT_TO_PHARMACY);
+        prescription.setItems(List.of(item));
+
+        Pharmacy pharmacy = new Pharmacy();
+        pharmacy.setId(20L);
+
+        fulfillment.setPharmacy(pharmacy);
+        fulfillment.setStatus(FulfillmentStatus.READY_FOR_PICKUP);
+
+        CompleteFulfillmentRequest request =
+                new CompleteFulfillmentRequest();
+
+        FulfillPrescriptionItemRequest requestItem =
+                new FulfillPrescriptionItemRequest();
+
+        requestItem.setPrescriptionItemId(100L);
+        requestItem.setDispensedQuantity(0);
+
+        request.setItems(List.of(requestItem));
+
+        when(fulfillmentRepository.findForUpdate(1L))
+                .thenReturn(Optional.of(fulfillment));
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> fulfillmentService.completed(1L, request)
+        );
+
+        assertEquals(
+                "Fulfillment operation must dispense at least one item",
+                exception.getMessage()
+        );
+
+        assertEquals(0, item.getDispensedQuantity());
+    }
 }
