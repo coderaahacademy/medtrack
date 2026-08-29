@@ -13,6 +13,7 @@ import com.medtrack.enums.PrescriptionStatus;
 import com.medtrack.exception.InvalidStatusTransitionException;
 import com.medtrack.repository.InventoryRepository;
 import com.medtrack.repository.PrescriptionFulfillmentRepository;
+import com.medtrack.repository.PrescriptionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +33,9 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class FulfillmentServiceTest {
+
+    @Mock
+    private PrescriptionRepository prescriptionRepository;
 
     @Mock
     private PrescriptionFulfillmentRepository fulfillmentRepository;
@@ -108,8 +112,16 @@ class FulfillmentServiceTest {
 
     @Test
     void shouldRejectCompletedWhenPrescriptionIsCancelled() {
+
+        when(fulfillmentRepository.findById(1L))
+                .thenReturn(Optional.of(fulfillment));
+
+        when(prescriptionRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(prescription));
+
         when(fulfillmentRepository.findForUpdate(1L))
                 .thenReturn(Optional.of(fulfillment));
+
 
         assertThrows(
                 InvalidStatusTransitionException.class,
@@ -155,8 +167,15 @@ class FulfillmentServiceTest {
 
         request.setItems(List.of(requestItem));
 
+        when(fulfillmentRepository.findById(1L))
+                .thenReturn(Optional.of(fulfillment));
+
+        when(prescriptionRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(prescription));
+
         when(fulfillmentRepository.findForUpdate(1L))
                 .thenReturn(Optional.of(fulfillment));
+
 
         when(inventoryRepository.findForUpdate(20L, 10L))
                 .thenReturn(Optional.of(inventory));
@@ -222,8 +241,15 @@ class FulfillmentServiceTest {
 
         request.setItems(List.of(requestItem));
 
+        when(fulfillmentRepository.findById(1L))
+                .thenReturn(Optional.of(fulfillment));
+
+        when(prescriptionRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(prescription));
+
         when(fulfillmentRepository.findForUpdate(1L))
                 .thenReturn(Optional.of(fulfillment));
+
 
         when(inventoryRepository.findForUpdate(20L, 10L))
                 .thenReturn(Optional.of(inventory));
@@ -290,8 +316,15 @@ class FulfillmentServiceTest {
 
         firstRequest.setItems(List.of(firstRequestItem));
 
+        when(fulfillmentRepository.findById(1L))
+                .thenReturn(Optional.of(fulfillment));
+
+        when(prescriptionRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(prescription));
+
         when(fulfillmentRepository.findForUpdate(1L))
                 .thenReturn(Optional.of(fulfillment));
+
 
         when(inventoryRepository.findForUpdate(20L, 10L))
                 .thenReturn(Optional.of(inventory));
@@ -388,8 +421,15 @@ class FulfillmentServiceTest {
 
         request.setItems(List.of(requestItem));
 
+        when(fulfillmentRepository.findById(1L))
+                .thenReturn(Optional.of(fulfillment));
+
+        when(prescriptionRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(prescription));
+
         when(fulfillmentRepository.findForUpdate(1L))
                 .thenReturn(Optional.of(fulfillment));
+
 
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
@@ -441,8 +481,15 @@ class FulfillmentServiceTest {
 
         request.setItems(List.of(requestItem));
 
+        when(fulfillmentRepository.findById(1L))
+                .thenReturn(Optional.of(fulfillment));
+
+        when(prescriptionRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(prescription));
+
         when(fulfillmentRepository.findForUpdate(1L))
                 .thenReturn(Optional.of(fulfillment));
+
 
         when(inventoryRepository.findForUpdate(20L, 10L))
                 .thenReturn(Optional.of(inventory));
@@ -518,6 +565,12 @@ class FulfillmentServiceTest {
         requestItem2.setDispensedQuantity(5);
 
         request.setItems(List.of(requestItem1, requestItem2));
+
+        when(fulfillmentRepository.findById(1L))
+                .thenReturn(Optional.of(fulfillment));
+
+        when(prescriptionRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(prescription));
 
         when(fulfillmentRepository.findForUpdate(1L))
                 .thenReturn(Optional.of(fulfillment));
@@ -605,6 +658,12 @@ class FulfillmentServiceTest {
 
         request.setItems(List.of(requestItem1, requestItem2));
 
+        when(fulfillmentRepository.findById(1L))
+                .thenReturn(Optional.of(fulfillment));
+
+        when(prescriptionRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(prescription));
+
         when(fulfillmentRepository.findForUpdate(1L))
                 .thenReturn(Optional.of(fulfillment));
 
@@ -663,6 +722,12 @@ class FulfillmentServiceTest {
         requestItem.setDispensedQuantity(0);
 
         request.setItems(List.of(requestItem));
+
+        when(fulfillmentRepository.findById(1L))
+                .thenReturn(Optional.of(fulfillment));
+
+        when(prescriptionRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(prescription));
 
         when(fulfillmentRepository.findForUpdate(1L))
                 .thenReturn(Optional.of(fulfillment));

@@ -13,6 +13,7 @@ import com.medtrack.enums.PrescriptionStatus;
 import com.medtrack.exception.InvalidStatusTransitionException;
 import com.medtrack.repository.InventoryRepository;
 import com.medtrack.repository.PrescriptionFulfillmentRepository;
+import com.medtrack.repository.PrescriptionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,17 +28,20 @@ public class FulfillmentService {
     private final InventoryRepository inventoryRepository;
     private final PrescriptionStatusTransitionService statusTransitionService;
     private final PrescriptionAuditService auditService;
+    private final PrescriptionRepository prescriptionRepository;
 
     public FulfillmentService(
             PrescriptionFulfillmentRepository prescriptionFulfillmentRepository,
             InventoryRepository inventoryRepository,
             PrescriptionStatusTransitionService statusTransitionService,
-            PrescriptionAuditService auditService) {
+            PrescriptionAuditService auditService,
+            PrescriptionRepository prescriptionRepository) {
 
         this.prescriptionFulfillmentRepository = prescriptionFulfillmentRepository;
         this.inventoryRepository = inventoryRepository;
         this.statusTransitionService = statusTransitionService;
         this.auditService = auditService;
+        this.prescriptionRepository = prescriptionRepository;
     }
 
     public FulfillmentResponse accept(Long id) {
@@ -126,6 +130,18 @@ public class FulfillmentService {
             Long id,
             CompleteFulfillmentRequest request) {
 
+        PrescriptionFulfillment initialFulfillment =
+                prescriptionFulfillmentRepository.findById(id)
+                        .orElseThrow(() -> new IllegalArgumentException(
+                                "Fulfillment not found with id " + id));
+
+        Long prescriptionId = initialFulfillment.getPrescription().getId();
+
+        Prescription prescription =
+                prescriptionRepository.findByIdForUpdate(prescriptionId)
+                        .orElseThrow(() -> new IllegalArgumentException(
+                                "Prescription not found with id " + prescriptionId));
+
         PrescriptionFulfillment fulfillment =
                 prescriptionFulfillmentRepository.findForUpdate(id)
                         .orElseThrow(() -> new IllegalArgumentException(
@@ -146,8 +162,6 @@ public class FulfillmentService {
                     "Only READY_FOR_PICKUP or PARTIALLY_FULFILLED fulfillments can be completed. Current status: "
                             + fulfillment.getStatus());
         }
-
-        Prescription prescription = fulfillment.getPrescription();
 
         PrescriptionStatus oldPrescriptionStatus =
                 prescription.getStatus();
