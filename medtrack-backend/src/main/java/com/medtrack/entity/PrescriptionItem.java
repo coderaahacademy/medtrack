@@ -31,6 +31,9 @@ public class PrescriptionItem {
     @Column(nullable = false)
     private Integer quantity;
 
+    @Column(name = "dispensed_quantity", nullable = false)
+    private Integer dispensedQuantity = 0;
+
     @Column(columnDefinition = "TEXT")
     private String instructions;
 
@@ -132,5 +135,13 @@ public class PrescriptionItem {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public Integer getDispensedQuantity() {
+        return dispensedQuantity;
+    }
+
+    public void setDispensedQuantity(Integer dispensedQuantity) {
+        this.dispensedQuantity = dispensedQuantity;
     }
 }
