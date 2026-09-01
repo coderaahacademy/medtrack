@@ -1,11 +1,20 @@
 package com.medtrack.dto;
 
+import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.NotNull;
+
 import java.time.LocalDateTime;
 
 public class CreateDoctorAvailabilityRequest {
 
+    @NotNull
     private Long doctorId;
+
+    @NotNull
+    @Future
     private LocalDateTime startAt;
+
+    @NotNull
     private LocalDateTime endAt;
 
     public CreateDoctorAvailabilityRequest() {

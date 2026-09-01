@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import com.medtrack.repository.DoctorAvailabilityRepository;
 
 /**
  * Central Resource Authorization Service for MedTrack.
@@ -28,13 +29,16 @@ public class ResourceAuthorizationService {
     private final PrescriptionRepository prescriptionRepository;
     private final PrescriptionFulfillmentRepository fulfillmentRepository;
     private final VisitRepository visitRepository;
+    private final DoctorAvailabilityRepository doctorAvailabilityRepository;
 
     public ResourceAuthorizationService(PatientRepository patientRepository,
                                         DoctorRepository doctorRepository,
+                                        DoctorAvailabilityRepository doctorAvailabilityRepository,
                                         PharmacyRepository pharmacyRepository,
                                         PrescriptionRepository prescriptionRepository,
                                         PrescriptionFulfillmentRepository fulfillmentRepository,
                                         VisitRepository visitRepository) {
+        this.doctorAvailabilityRepository = doctorAvailabilityRepository;
         this.patientRepository = patientRepository;
         this.doctorRepository = doctorRepository;
         this.pharmacyRepository = pharmacyRepository;
@@ -118,6 +122,21 @@ public class ResourceAuthorizationService {
         }
         return isPharmacy() && isCurrentUserId(userId);
     }
+    public boolean canManageDoctorAvailabilityById(Long availabilityId) {
+        if (availabilityId == null) {
+            return false;
+        }
+
+        var availability = doctorAvailabilityRepository.findByIdOrThrow(availabilityId);
+
+        if (isAdmin()) {
+            return true;
+        }
+
+        return isDoctor()
+                && availability.getDoctor() != null
+                && ownsDoctor(availability.getDoctor().getId());
+    }
 
     // ==========================================
     // PROFILE OWNERSHIP & ACCESS AUTHORIZATION
@@ -187,6 +206,40 @@ public class ResourceAuthorizationService {
             return true;
         }
         return ownsDoctor(doctorId);
+    }
+    public boolean canManageDoctorAvailability(Long doctorId) {
+        if (doctorId == null) {
+            return false;
+        }
+
+        if (isAdmin()) {
+            doctorRepository.findByIdOrThrow(doctorId);
+            return true;
+        }
+
+        return isDoctor() && ownsDoctor(doctorId);
+    }
+
+    public boolean canReadDoctorAvailability(Long doctorId) {
+        if (doctorId == null) {
+            return false;
+        }
+
+        Doctor doctor = doctorRepository.findByIdOrThrow(doctorId);
+
+        if (!doctor.isActive()) {
+            return false;
+        }
+
+        if (isAdmin()) {
+            return true;
+        }
+
+        if (isPatient()) {
+            return true;
+        }
+
+        return isDoctor() && ownsDoctor(doctorId);
     }
 
     public boolean canModifyPharmacy(Long pharmacyId) {

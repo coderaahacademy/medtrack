@@ -28,7 +28,7 @@ public class DoctorController {
         return ResponseEntity.status(HttpStatus.CREATED).body(doctorService.create(request));
     }
 
-    @GetMappinggit
+    @GetMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Page<DoctorResponse>> getAll(Pageable pageable) {
         return ResponseEntity.ok(doctorService.getAll(pageable));

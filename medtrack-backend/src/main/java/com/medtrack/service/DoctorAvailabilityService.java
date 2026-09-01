@@ -30,7 +30,11 @@ public class DoctorAvailabilityService {
     @Transactional
     public DoctorAvailabilityResponse create(CreateDoctorAvailabilityRequest request) {
 
-        Doctor doctor = doctorRepository.findByIdOrThrow(request.getDoctorId());
+        Doctor doctor = doctorRepository.findWithLockById(request.getDoctorId())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Doctor not found"
+                ));
 
         if (!doctor.isActive()) {
             throw new ResponseStatusException(
@@ -81,6 +85,39 @@ public class DoctorAvailabilityService {
         }
 
         return availabilityRepository.findByDoctorId(doctorId)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<DoctorAvailabilityResponse> getByDoctorIdAndDateRange(
+            Long doctorId,
+            LocalDateTime startAt,
+            LocalDateTime endAt) {
+
+        Doctor doctor = doctorRepository.findByIdOrThrow(doctorId);
+
+        if (!doctor.isActive()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Doctor must be active"
+            );
+        }
+
+        if (!startAt.isBefore(endAt)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "startAt must be before endAt"
+            );
+        }
+
+        return availabilityRepository
+                .findByDoctorIdAndStartAtLessThanAndEndAtGreaterThanOrderByStartAtAsc(
+                        doctorId,
+                        endAt,
+                        startAt
+                )
                 .stream()
                 .map(this::toResponse)
                 .toList();

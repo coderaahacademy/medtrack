@@ -14,4 +14,10 @@ public interface DoctorAvailabilityRepository extends BaseRepository<DoctorAvail
             LocalDateTime endAt,
             LocalDateTime startAt
     );
+
+    List<DoctorAvailability> findByDoctorIdAndStartAtLessThanAndEndAtGreaterThanOrderByStartAtAsc(
+            Long doctorId,
+            LocalDateTime endAt,
+            LocalDateTime startAt
+    );
 }
