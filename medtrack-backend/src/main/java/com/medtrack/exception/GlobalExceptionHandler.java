@@ -14,6 +14,8 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.data.mapping.PropertyReferenceException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -163,6 +165,43 @@ public class GlobalExceptionHandler {
                 "Required request body is missing or invalid JSON format",
                 request,
                 Collections.emptyList()
+        );
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponseDto> handleTypeMismatch(
+            MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
+
+        String message = "Invalid value for parameter '" + ex.getName() + "'";
+        Class<?> requiredType = ex.getRequiredType();
+        if (requiredType != null && requiredType.isEnum()) {
+            message += ". Allowed values: " + java.util.Arrays.toString(requiredType.getEnumConstants());
+        }
+
+        return buildResponse(
+                HttpStatus.BAD_REQUEST,
+                "INVALID_PARAMETER",
+                message,
+                request,
+                List.of(new FieldErrorDto(ex.getName(),
+                        ex.getValue() != null ? "Invalid value: " + ex.getValue() : "Invalid value"))
+        );
+    }
+
+    /**
+     * Sorting by a property the entity does not have is a client mistake, not a server fault.
+     * Spring Data raises this while resolving a Pageable's sort, e.g. ?sort=doesNotExist,asc.
+     */
+    @ExceptionHandler(PropertyReferenceException.class)
+    public ResponseEntity<ErrorResponseDto> handleUnknownSortProperty(
+            PropertyReferenceException ex, HttpServletRequest request) {
+
+        return buildResponse(
+                HttpStatus.BAD_REQUEST,
+                "INVALID_SORT_PROPERTY",
+                "Unknown sort property '" + ex.getPropertyName() + "'",
+                request,
+                List.of(new FieldErrorDto("sort", "Unknown property: " + ex.getPropertyName()))
         );
     }
 
