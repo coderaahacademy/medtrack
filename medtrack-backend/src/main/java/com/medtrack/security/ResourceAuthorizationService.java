@@ -335,6 +335,33 @@ public class ResourceAuthorizationService {
         return isPharmacy() && ownsFulfillment(fulfillmentId);
     }
 
+    /**
+     * T46: Read access to a pharmacy's fulfillment work queue.
+     * ADMIN may inspect any pharmacy; a PHARMACY user only its own.
+     */
+    public boolean canReadPharmacyQueue(Long pharmacyId) {
+        if (pharmacyId == null) return false;
+        if (isAdmin()) {
+            // Confirm entity exists so non-existent IDs still trigger 404
+            pharmacyRepository.findByIdOrThrow(pharmacyId);
+            return true;
+        }
+        return isPharmacy() && ownsPharmacy(pharmacyId);
+    }
+
+    /**
+     * T46: Read access to a single fulfillment.
+     * A pharmacy must not be able to retrieve another pharmacy's fulfillment by guessing the ID.
+     */
+    public boolean canReadFulfillment(Long fulfillmentId) {
+        if (fulfillmentId == null) return false;
+        if (isAdmin()) {
+            fulfillmentRepository.findByIdOrThrow(fulfillmentId);
+            return true;
+        }
+        return isPharmacy() && ownsFulfillment(fulfillmentId);
+    }
+
     // ==========================================
     // CLINICAL RESOURCE: VISITS
     // ==========================================

@@ -8,7 +8,14 @@ import com.medtrack.enums.Role;
 import com.medtrack.enums.UserStatus;
 import com.medtrack.repository.DoctorAvailabilityRepository;
 import com.medtrack.repository.DoctorRepository;
+import com.medtrack.repository.MedicalReportRepository;
+import com.medtrack.repository.PatientRepository;
+import com.medtrack.repository.PharmacyRepository;
+import com.medtrack.repository.PrescriptionFulfillmentRepository;
+import com.medtrack.repository.PrescriptionItemRepository;
+import com.medtrack.repository.PrescriptionRepository;
 import com.medtrack.repository.UserRepository;
+import com.medtrack.repository.VisitRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,9 +58,42 @@ class DoctorAvailabilityAuthorizationIntegrationTest {
     @Autowired
     private DoctorAvailabilityRepository availabilityRepository;
 
+    @Autowired
+    private PrescriptionFulfillmentRepository fulfillmentRepository;
+
+    @Autowired
+    private PrescriptionItemRepository prescriptionItemRepository;
+
+    @Autowired
+    private PrescriptionRepository prescriptionRepository;
+
+    @Autowired
+    private MedicalReportRepository medicalReportRepository;
+
+    @Autowired
+    private VisitRepository visitRepository;
+
+    @Autowired
+    private PatientRepository patientRepository;
+
+    @Autowired
+    private PharmacyRepository pharmacyRepository;
+
+    /**
+     * Deletes in foreign-key order: every table that points at doctors or users
+     * has to be emptied first, otherwise leftover rows from other test classes
+     * block the delete on doctors.
+     */
     @BeforeEach
     void cleanAvailabilityData() {
         availabilityRepository.deleteAll();
+        fulfillmentRepository.deleteAll();
+        prescriptionItemRepository.deleteAll();
+        prescriptionRepository.deleteAll();
+        medicalReportRepository.deleteAll();
+        visitRepository.deleteAll();
+        patientRepository.deleteAll();
+        pharmacyRepository.deleteAll();
         doctorRepository.deleteAll();
         userRepository.deleteAll();
     }

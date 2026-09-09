@@ -30,6 +30,40 @@ Students will work using:
 
 ---
 
+# ☕ Required JDK (read this first)
+
+The project is built and tested against **JDK 21**. Newer JDKs (25, 26) break Mockito,
+which shows up as dozens of `MockitoException: Cannot mock this class` errors that have
+nothing to do with your code.
+
+`<java.version>21</java.version>` in the pom only sets the *bytecode target* — the build
+still runs on whatever `JAVA_HOME` points at. To make this explicit, the build uses a
+Maven toolchain and **fails with a clear message** if JDK 21 is missing.
+
+One-time setup per machine:
+
+1. Install a JDK 21 (Temurin/Adoptium) if you do not have one.
+2. Create `~/.m2/toolchains.xml`:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<toolchains xmlns="http://maven.apache.org/TOOLCHAINS/1.1.0">
+    <toolchain>
+        <type>jdk</type>
+        <provides>
+            <version>21</version>
+        </provides>
+        <configuration>
+            <jdkHome>/absolute/path/to/your/jdk-21/Contents/Home</jdkHome>
+        </configuration>
+    </toolchain>
+</toolchains>
+```
+
+On macOS the path usually ends in `/Contents/Home`; on Linux/Windows it is the JDK folder itself.
+
+---
+
 # ▶️ How to Run the Project
 
 ```bash

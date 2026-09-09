@@ -1,8 +1,13 @@
 package com.medtrack.controller;
 
+import com.medtrack.dto.FulfillmentDetailResponse;
 import com.medtrack.dto.FulfillmentResponse;
 import com.medtrack.dto.RejectFulfillmentRequest;
+import com.medtrack.service.FulfillmentQueryService;
 import com.medtrack.service.FulfillmentService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,9 +19,24 @@ import com.medtrack.dto.CompleteFulfillmentRequest;
 public class FulfillmentController {
 
     private final FulfillmentService fulfillmentService;
+    private final FulfillmentQueryService fulfillmentQueryService;
 
-    public FulfillmentController(FulfillmentService fulfillmentService) {
+    public FulfillmentController(FulfillmentService fulfillmentService,
+                                 FulfillmentQueryService fulfillmentQueryService) {
         this.fulfillmentService = fulfillmentService;
+        this.fulfillmentQueryService = fulfillmentQueryService;
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("@authz.canReadFulfillment(#id)")
+    @Operation(summary = "Get full dispensing details of a fulfillment")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Fulfillment details returned"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - Caller does not own this fulfillment"),
+            @ApiResponse(responseCode = "404", description = "Fulfillment not found")
+    })
+    public ResponseEntity<FulfillmentDetailResponse> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(fulfillmentQueryService.getFulfillmentDetail(id));
     }
 
     @PatchMapping("/{id}/accept")
