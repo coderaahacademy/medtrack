@@ -73,6 +73,32 @@
     </dependencies>
     <build>
         <plugins>
+            <!--
+                Pins the JDK the build actually runs on. <java.version> only sets the
+                bytecode target - without this the build silently uses whatever JAVA_HOME
+                points at, which breaks Mockito on newer JDKs. Requires a jdk entry for
+                version 21 in ~/.m2/toolchains.xml, see README.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-toolchains-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>select-jdk-toolchain</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <toolchains>
+                        <jdk>
+                            <version>21</version>
+                        </jdk>
+                    </toolchains>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
